@@ -13,8 +13,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
-
 @Entity
 @Table(name = "personas")
 @Getter
@@ -34,30 +32,9 @@ public class Persona {
     @Column(name = "apellido")
     private String apellido;
 
-    @Column(name = "correo_electronico")
-    private String correoElectronico;
-
-    @Column(name = "genero")
-    private String genero;
-
     @Column(name = "identificacion", columnDefinition = "BIGINT")
     private String identificacion;
 
     @Column(name = "tipo_identificacion")
     private String tipoIdentificacion;
-
-    @Column(name = "telefono")
-    private String telefono;
-
-    @Column(name = "usuario_creacion")
-    private Integer usuarioCreacion;
-
-    @Column(name = "fecha_creacion")
-    private LocalDateTime fechaCreacion;
-
-    @Column(name = "usuario_modificacion")
-    private Integer usuarioModificacion;
-
-    @Column(name = "fecha_modificacion")
-    private LocalDateTime fechaModificacion;
 }

@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.maestria.gestion.hoja_de_vida.dto.response.HistoriaAcademicaResponseDTO;
-import com.maestria.gestion.hoja_de_vida.service.EstudianteService;
+import com.maestria.gestion.hoja_de_vida.service.HistoriaAcademicaService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -18,10 +18,10 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class HistoriaAcademicaController {
 
-    private final EstudianteService estudianteService;
+    private final HistoriaAcademicaService historiaAcademicaService;
 
     @GetMapping("/{codigoEstudiante}/historia-academica")
     public ResponseEntity<HistoriaAcademicaResponseDTO> getHistoriaAcademica(@PathVariable String codigoEstudiante) {
-        return ResponseEntity.ok(estudianteService.obtenerHistoriaAcademica(codigoEstudiante));
+        return ResponseEntity.ok(historiaAcademicaService.obtenerHistoriaAcademica(codigoEstudiante));
     }
 }
