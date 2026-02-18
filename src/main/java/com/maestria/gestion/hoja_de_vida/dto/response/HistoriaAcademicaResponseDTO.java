@@ -14,6 +14,10 @@ import lombok.NoArgsConstructor;
 public class HistoriaAcademicaResponseDTO {
 
     private String codigoEstudiante;
+    private String nombreCompleto;
+    private String correoUniversidad;
+    private String tituloPregrado;
+    private String fechaGrado;
     private List<AsignaturaCursadaDTO> fundamentacion;
     private List<AsignaturaCursadaDTO> electivas;
     private InvestigacionDTO investigacion;

@@ -16,6 +16,8 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
+import java.time.LocalDate;
+
 @Entity
 @Table(name = "estudiantes")
 @Getter
@@ -31,6 +33,15 @@ public class Estudiante {
 
     @Column(name = "codigo", nullable = false, unique = true)
     private String codigo;
+
+    @Column(name = "correo_universidad", nullable = false)
+    private String correoUniversidad;
+
+    @Column(name = "titulo_pregrado", nullable = false)
+    private String tituloPregrado;
+
+    @Column(name = "fecha_grado", nullable = false)
+    private LocalDate fechaGrado;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_persona", nullable = false)
