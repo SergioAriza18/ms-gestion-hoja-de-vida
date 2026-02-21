@@ -1,6 +1,5 @@
 package com.maestria.gestion.hoja_de_vida.service.impl;
 
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -9,16 +8,12 @@ import org.springframework.stereotype.Service;
 
 import com.maestria.gestion.hoja_de_vida.domain.AsignaturaCursada;
 import com.maestria.gestion.hoja_de_vida.domain.Estudiante;
-import com.maestria.gestion.hoja_de_vida.domain.PasantiaInvestigacion;
-import com.maestria.gestion.hoja_de_vida.domain.PracticaDocente;
-import com.maestria.gestion.hoja_de_vida.domain.PublicacionInvestigacion;
 import com.maestria.gestion.hoja_de_vida.dto.response.AsignaturaCursadaDTO;
-import com.maestria.gestion.hoja_de_vida.dto.response.ComplementacionDTO;
 import com.maestria.gestion.hoja_de_vida.dto.response.HistoriaAcademicaResponseDTO;
-import com.maestria.gestion.hoja_de_vida.dto.response.InvestigacionDTO;
 import com.maestria.gestion.hoja_de_vida.dto.response.PasantiaInvestigacionDTO;
 import com.maestria.gestion.hoja_de_vida.dto.response.PracticaDocenteDTO;
 import com.maestria.gestion.hoja_de_vida.dto.response.PublicacionInvestigacionDTO;
+import com.maestria.gestion.hoja_de_vida.mapper.HistoriaAcademicaMapper;
 import com.maestria.gestion.hoja_de_vida.repository.AsignaturaCursadaRepository;
 import com.maestria.gestion.hoja_de_vida.repository.EstudianteRepository;
 import com.maestria.gestion.hoja_de_vida.repository.PasantiaInvestigacionRepository;
@@ -31,8 +26,6 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class HistoriaAcademicaServiceImpl implements HistoriaAcademicaService {
-
-    private static final DateTimeFormatter FECHA_GRADO_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     private static final String AREA_FUNDAMENTACION = "FUNDAMENTACION";
     private static final String AREA_ELECTIVAS = "ELECTIVAS";
@@ -58,102 +51,43 @@ public class HistoriaAcademicaServiceImpl implements HistoriaAcademicaService {
     @Override
     public HistoriaAcademicaResponseDTO obtenerHistoriaAcademica(String codigoEstudiante) {
         Estudiante estudiante = obtenerEstudiantePorCodigo(codigoEstudiante);
-
         List<AsignaturaCursada> asignaturas = asignaturaCursadaRepository.findByIdEstudiante(estudiante.getId());
-        List<PasantiaInvestigacion> pasantias = pasantiaInvestigacionRepository.findByIdEstudiante(estudiante.getId());
-        List<PublicacionInvestigacion> publicaciones = publicacionInvestigacionRepository
-                .findByIdEstudiante(estudiante.getId());
-        List<PracticaDocente> practicas = practicaDocenteRepository.findByIdEstudiante(estudiante.getId());
 
         List<AsignaturaCursadaDTO> fundamentacion = filtrarAsignaturasPorArea(asignaturas, AREA_FUNDAMENTACION);
         List<AsignaturaCursadaDTO> electivas = filtrarAsignaturasPorArea(asignaturas, AREA_ELECTIVAS);
         List<AsignaturaCursadaDTO> investigacionAsignaturas = filtrarAsignaturasPorArea(asignaturas, AREA_INVESTIGACION);
-        List<AsignaturaCursadaDTO> competenciasEmpresariales = filtrarAsignaturasPorArea(asignaturas,
-                AREA_COMPLEMENTACION);
+        List<AsignaturaCursadaDTO> competenciasEmpresariales = filtrarAsignaturasPorArea(asignaturas, AREA_COMPLEMENTACION);
 
-        List<PasantiaInvestigacionDTO> pasantiasDto = pasantias.stream()
-                .map(this::toPasantiaDto)
+        List<PasantiaInvestigacionDTO> pasantiasDto = pasantiaInvestigacionRepository.findByIdEstudiante(estudiante.getId())
+                .stream()
+                .map(HistoriaAcademicaMapper::toPasantiaDto)
                 .toList();
-        List<PublicacionInvestigacionDTO> publicacionesDto = publicaciones.stream()
-                .map(this::toPublicacionDto)
+        List<PublicacionInvestigacionDTO> publicacionesDto = publicacionInvestigacionRepository.findByIdEstudiante(estudiante.getId())
+                .stream()
+                .map(HistoriaAcademicaMapper::toPublicacionDto)
                 .toList();
-        PracticaDocenteDTO practicaDocente = practicas.stream()
+        PracticaDocenteDTO practicaDocente = practicaDocenteRepository.findByIdEstudiante(estudiante.getId())
+                .stream()
                 .findFirst()
-                .map(this::toPracticaDto)
+                .map(HistoriaAcademicaMapper::toPracticaDto)
                 .orElse(null);
 
-        String nombreCompleto = (estudiante.getPersona().getNombre() + " " + estudiante.getPersona().getApellido()).trim();
-        String fechaGrado = estudiante.getFechaGrado() == null ? null : estudiante.getFechaGrado().format(FECHA_GRADO_FORMATTER);
-
-        InvestigacionDTO investigacion = InvestigacionDTO.builder()
-                .asignaturasVistas(investigacionAsignaturas)
-                .pasantias(pasantiasDto)
-                .publicaciones(publicacionesDto)
-                .build();
-
-        ComplementacionDTO complementacion = ComplementacionDTO.builder()
-                .practicaDocente(practicaDocente)
-                .competenciasEmpresariales(competenciasEmpresariales)
-                .build();
-
-        return HistoriaAcademicaResponseDTO.builder()
-                .codigoEstudiante(estudiante.getCodigo())
-                .nombreCompleto(nombreCompleto)
-                .correoUniversidad(estudiante.getCorreoUniversidad())
-                .tituloPregrado(estudiante.getTituloPregrado())
-                .fechaGrado(fechaGrado)
-                .fundamentacion(fundamentacion)
-                .electivas(electivas)
-                .investigacion(investigacion)
-                .complementacion(complementacion)
-                .build();
+        return HistoriaAcademicaMapper.toHistoriaAcademicaResponse(
+                estudiante,
+                fundamentacion,
+                electivas,
+                investigacionAsignaturas,
+                pasantiasDto,
+                publicacionesDto,
+                practicaDocente,
+                competenciasEmpresariales);
     }
 
     private List<AsignaturaCursadaDTO> filtrarAsignaturasPorArea(List<AsignaturaCursada> asignaturas, String area) {
         return asignaturas.stream()
                 .filter(asignatura -> area.equals(clasificarAreaPorCodigo(asignatura.getCodigoMateria())))
-                .map(this::toAsignaturaDto)
+                .map(HistoriaAcademicaMapper::toAsignaturaDto)
                 .toList();
-    }
-
-    private AsignaturaCursadaDTO toAsignaturaDto(AsignaturaCursada asignatura) {
-        return AsignaturaCursadaDTO.builder()
-                .periodoCursado(asignatura.getPeriodoCursado())
-                .codigoMateria(asignatura.getCodigoMateria())
-                .nombreMateria(asignatura.getNombreMateria())
-                .creditos(asignatura.getCreditos())
-                .notaDefinitiva(asignatura.getNotaDefinitiva())
-                .build();
-    }
-
-    private PasantiaInvestigacionDTO toPasantiaDto(PasantiaInvestigacion pasantia) {
-        return PasantiaInvestigacionDTO.builder()
-                .creditosAsignados(pasantia.getCreditosAsignados())
-                .acta(pasantia.getActa())
-                .fechaInicio(pasantia.getFechaInicio())
-                .fechaFin(pasantia.getFechaFin())
-                .pais(pasantia.getPais())
-                .ciudad(pasantia.getCiudad())
-                .universidad(pasantia.getUniversidad())
-                .build();
-    }
-
-    private PublicacionInvestigacionDTO toPublicacionDto(PublicacionInvestigacion publicacion) {
-        return PublicacionInvestigacionDTO.builder()
-                .creditosAsignados(publicacion.getCreditosAsignados())
-                .acta(publicacion.getActa())
-                .nombrePublicacion(publicacion.getNombrePublicacion())
-                .tipoPublicacion(publicacion.getTipoPublicacion())
-                .fechaAceptacion(publicacion.getFechaAceptacion())
-                .build();
-    }
-
-    private PracticaDocenteDTO toPracticaDto(PracticaDocente practica) {
-        return PracticaDocenteDTO.builder()
-                .creditosAsignados(practica.getCreditosAsignados())
-                .acta(practica.getActa())
-                .numeroActividades(practica.getNumeroActividades())
-                .build();
     }
 
     private Estudiante obtenerEstudiantePorCodigo(String codigoEstudiante) {
