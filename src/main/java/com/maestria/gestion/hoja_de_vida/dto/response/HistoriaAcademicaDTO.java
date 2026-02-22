@@ -9,8 +9,10 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ComplementacionDTO {
+public class HistoriaAcademicaDTO {
 
-    private PracticaDocenteDTO practicaDocente;
-    private AreaAcademicaDTO competenciasEmpresariales;
+    private AreaAcademicaDTO fundamentacion;
+    private AreaAcademicaDTO electivas;
+    private InvestigacionDTO investigacion;
+    private ComplementacionDTO complementacion;
 }

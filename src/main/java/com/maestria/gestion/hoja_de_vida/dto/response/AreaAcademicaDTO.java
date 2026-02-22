@@ -1,5 +1,7 @@
 package com.maestria.gestion.hoja_de_vida.dto.response;
 
+import java.util.List;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -9,8 +11,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ComplementacionDTO {
+public class AreaAcademicaDTO {
 
-    private PracticaDocenteDTO practicaDocente;
-    private AreaAcademicaDTO competenciasEmpresariales;
+    private List<AsignaturaCursadaDTO> asignaturas;
 }

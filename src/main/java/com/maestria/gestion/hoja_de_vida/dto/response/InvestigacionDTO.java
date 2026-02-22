@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class InvestigacionDTO {
 
-    private List<AsignaturaCursadaDTO> asignaturasVistas;
+    private List<AsignaturaCursadaDTO> asignaturas;
     private List<PasantiaInvestigacionDTO> pasantias;
     private List<PublicacionInvestigacionDTO> publicaciones;
 }

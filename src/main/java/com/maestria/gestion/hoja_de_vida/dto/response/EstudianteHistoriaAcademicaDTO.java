@@ -9,8 +9,11 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ComplementacionDTO {
+public class EstudianteHistoriaAcademicaDTO {
 
-    private PracticaDocenteDTO practicaDocente;
-    private AreaAcademicaDTO competenciasEmpresariales;
+    private String codigoEstudiante;
+    private String nombreCompleto;
+    private String correoUniversidad;
+    private String tituloPregrado;
+    private String fechaGrado;
 }
