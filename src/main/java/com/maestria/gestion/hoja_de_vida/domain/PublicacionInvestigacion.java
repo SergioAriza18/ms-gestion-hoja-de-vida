@@ -16,7 +16,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "publicaciones_investigacion")
+@Table(name = "publicaciones")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -28,21 +28,18 @@ public class PublicacionInvestigacion {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "id_estudiante", nullable = false)
-    private Long idEstudiante;
-
-    @Column(name = "creditos_asignados", nullable = false)
+    @Column(name = "creditospub")
     private Integer creditosAsignados;
 
-    @Column(name = "acta", nullable = false)
+    @Column(name = "numactapub")
     private String acta;
 
-    @Column(name = "nombre_publicacion", nullable = false)
+    @Column(name = "titulopubli", nullable = false)
     private String nombrePublicacion;
 
-    @Column(name = "tipo_publicacion", nullable = false)
+    @Column(name = "tipopub", nullable = false)
     private String tipoPublicacion;
 
-    @Column(name = "fecha_aceptacion")
+    @Column(name = "fechaaceptacion")
     private LocalDate fechaAceptacion;
 }

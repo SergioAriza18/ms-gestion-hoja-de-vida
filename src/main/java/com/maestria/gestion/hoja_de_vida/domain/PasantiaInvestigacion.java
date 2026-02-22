@@ -1,7 +1,5 @@
 package com.maestria.gestion.hoja_de_vida.domain;
 
-import java.time.LocalDate;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -16,7 +14,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "pasantias_investigacion")
+@Table(name = "pasantias")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -31,24 +29,18 @@ public class PasantiaInvestigacion {
     @Column(name = "id_estudiante", nullable = false)
     private Long idEstudiante;
 
-    @Column(name = "creditos_asignados", nullable = false)
+    @Column(name = "creditospas", nullable = false)
     private Integer creditosAsignados;
 
-    @Column(name = "acta", nullable = false)
+    @Column(name = "numactapas", nullable = false)
     private String acta;
 
-    @Column(name = "fecha_inicio")
-    private LocalDate fechaInicio;
+    @Column(name = "fechaactapas")
+    private String fechaActa;
 
-    @Column(name = "fecha_fin")
-    private LocalDate fechaFin;
+    @Column(name = "informepasantia")
+    private String informePasantia;
 
-    @Column(name = "pais")
-    private String pais;
-
-    @Column(name = "ciudad")
-    private String ciudad;
-
-    @Column(name = "universidad")
-    private String universidad;
+    @Column(name = "estado")
+    private Boolean estado;
 }

@@ -1,5 +1,8 @@
 package com.maestria.gestion.hoja_de_vida.domain;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -14,7 +17,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "asignaturas_cursadas")
+@Table(name = "matricula_calificaciones")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -26,21 +29,18 @@ public class AsignaturaCursada {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "id_estudiante", nullable = false)
-    private Long idEstudiante;
+    @Column(name = "id_matricula", nullable = false)
+    private Integer idMatricula;
 
-    @Column(name = "periodo_cursado", nullable = false)
-    private String periodoCursado;
+    @Column(name = "id_asignatura", nullable = false)
+    private Long idAsignatura;
 
-    @Column(name = "codigo_materia", nullable = false)
-    private String codigoMateria;
+    @Column(name = "nota", nullable = false, precision = 3, scale = 2)
+    private BigDecimal nota;
 
-    @Column(name = "nombre_materia", nullable = false)
-    private String nombreMateria;
+    @Column(name = "es_definitiva")
+    private Boolean esDefinitiva;
 
-    @Column(name = "creditos", nullable = false)
-    private Integer creditos;
-
-    @Column(name = "nota_definitiva")
-    private String notaDefinitiva;
+    @Column(name = "fecha_registro", nullable = false)
+    private LocalDateTime fechaRegistro;
 }
