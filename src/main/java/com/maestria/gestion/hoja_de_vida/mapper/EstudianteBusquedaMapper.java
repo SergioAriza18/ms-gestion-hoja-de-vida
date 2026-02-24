@@ -2,17 +2,17 @@ package com.maestria.gestion.hoja_de_vida.mapper;
 
 import com.maestria.gestion.hoja_de_vida.domain.Estudiante;
 import com.maestria.gestion.hoja_de_vida.domain.Persona;
-import com.maestria.gestion.hoja_de_vida.dto.response.EstudianteResponseDTO;
+import com.maestria.gestion.hoja_de_vida.dto.response.EstudianteBusquedaDTO;
 
-public class EstudianteMapper {
+public class EstudianteBusquedaMapper {
 
-    private EstudianteMapper() {
+    private EstudianteBusquedaMapper() {
     }
 
-    public static EstudianteResponseDTO toResponseDTO(Estudiante estudiante) {
+    public static EstudianteBusquedaDTO toResponseDTO(Estudiante estudiante) {
         Persona persona = estudiante.getPersona();
 
-        return EstudianteResponseDTO.builder()
+        return EstudianteBusquedaDTO.builder()
                 .codigo(estudiante.getCodigo())
                 .nombre(persona.getNombre())
                 .apellido(persona.getApellido())

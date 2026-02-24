@@ -7,7 +7,7 @@ import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import com.maestria.gestion.hoja_de_vida.dto.response.EstudianteResponseDTO;
+import com.maestria.gestion.hoja_de_vida.dto.response.EstudianteBusquedaDTO;
 import com.maestria.gestion.hoja_de_vida.service.EstudianteService;
 
 @RestController
@@ -19,12 +19,12 @@ public class EstudianteController {
     private final EstudianteService estudianteService;
 
     @GetMapping
-    public ResponseEntity<List<EstudianteResponseDTO>> listar() {
+    public ResponseEntity<List<EstudianteBusquedaDTO>> listar() {
         return ResponseEntity.ok(estudianteService.listar());
     }
 
     @GetMapping("/buscar")
-    public ResponseEntity<List<EstudianteResponseDTO>> buscar(@RequestParam String valor) {
+    public ResponseEntity<List<EstudianteBusquedaDTO>> buscar(@RequestParam String valor) {
         return ResponseEntity.ok(estudianteService.buscar(valor));
     }
 }
