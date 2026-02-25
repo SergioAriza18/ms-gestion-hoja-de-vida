@@ -36,7 +36,7 @@ public interface AsignaturaCursadaRepository extends JpaRepository<AsignaturaCur
         Long getCodigoAsignatura();
         String getNombreAsignatura();
         Integer getCreditos();
-        BigDecimal getNota();
+        BigDecimal getNota(); //Se debe cambiar luego
         Long getAreaFormacion();
     }
 }

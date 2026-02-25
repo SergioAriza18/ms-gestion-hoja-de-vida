@@ -8,5 +8,5 @@ import com.maestria.gestion.hoja_de_vida.domain.PasantiaInvestigacion;
 
 public interface PasantiaInvestigacionRepository extends JpaRepository<PasantiaInvestigacion, Long> {
 
-    List<PasantiaInvestigacion> findByIdEstudiante(Long idEstudiante);
+    List<PasantiaInvestigacion> findAllByIdEstudiante(Long idEstudiante);
 }

@@ -8,5 +8,5 @@ import com.maestria.gestion.hoja_de_vida.domain.PracticaDocente;
 
 public interface PracticaDocenteRepository extends JpaRepository<PracticaDocente, Long> {
 
-    List<PracticaDocente> findByIdEstudiante(Long idEstudiante);
+    List<PracticaDocente> findAllByIdEstudiante(Long idEstudiante);
 }

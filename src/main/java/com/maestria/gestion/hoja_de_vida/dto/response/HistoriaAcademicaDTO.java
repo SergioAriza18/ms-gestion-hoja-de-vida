@@ -15,4 +15,5 @@ public class HistoriaAcademicaDTO {
     private AreaAcademicaDTO electivas;
     private InvestigacionDTO investigacion;
     private ComplementacionDTO complementacion;
+    private InformacionAdicionalDTO informacionAdicional;
 }

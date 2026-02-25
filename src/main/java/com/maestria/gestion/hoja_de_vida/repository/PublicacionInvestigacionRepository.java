@@ -17,5 +17,5 @@ public interface PublicacionInvestigacionRepository extends JpaRepository<Public
                 ON publicacion.id = estudiantePublicacion.idpublicacion
             WHERE estudiantePublicacion.id_estudiante = :idEstudiante
             """, nativeQuery = true)
-    List<PublicacionInvestigacion> findPublicacionesByEstudianteId(@Param("idEstudiante") Long idEstudiante);
+    List<PublicacionInvestigacion> findAllByIdEstudiante(@Param("idEstudiante") Long idEstudiante);
 }

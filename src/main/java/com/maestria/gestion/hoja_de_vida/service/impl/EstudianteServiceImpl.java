@@ -44,7 +44,7 @@ public class EstudianteServiceImpl implements EstudianteService {
         }
 
         return estudianteRepository
-                .findByPersonaNombreStartingWithIgnoreCase(criterio)
+                .findAllByPersonaNombreStartingWithIgnoreCase(criterio)
                 .stream()
                 .map(EstudianteBusquedaMapper::toResponseDTO)
                 .toList();
