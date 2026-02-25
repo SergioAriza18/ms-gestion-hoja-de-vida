@@ -2,23 +2,26 @@ package com.maestria.gestion.hoja_de_vida.service.impl;
 
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 
 import org.springframework.stereotype.Service;
 
-import com.maestria.gestion.hoja_de_vida.domain.AsignaturaCursada;
 import com.maestria.gestion.hoja_de_vida.domain.Estudiante;
+
 import com.maestria.gestion.hoja_de_vida.dto.response.AsignaturaCursadaDTO;
 import com.maestria.gestion.hoja_de_vida.dto.response.HistoriaAcademicaResponseDTO;
 import com.maestria.gestion.hoja_de_vida.dto.response.PasantiaInvestigacionDTO;
 import com.maestria.gestion.hoja_de_vida.dto.response.PracticaDocenteDTO;
 import com.maestria.gestion.hoja_de_vida.dto.response.PublicacionInvestigacionDTO;
+
 import com.maestria.gestion.hoja_de_vida.mapper.HistoriaAcademicaMapper;
+
 import com.maestria.gestion.hoja_de_vida.repository.AsignaturaCursadaRepository;
+import com.maestria.gestion.hoja_de_vida.repository.AsignaturaCursadaRepository.AsignaturaCursadaResumen;
 import com.maestria.gestion.hoja_de_vida.repository.EstudianteRepository;
 import com.maestria.gestion.hoja_de_vida.repository.PasantiaInvestigacionRepository;
 import com.maestria.gestion.hoja_de_vida.repository.PracticaDocenteRepository;
 import com.maestria.gestion.hoja_de_vida.repository.PublicacionInvestigacionRepository;
+
 import com.maestria.gestion.hoja_de_vida.service.HistoriaAcademicaService;
 
 import lombok.RequiredArgsConstructor;
@@ -27,78 +30,175 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class HistoriaAcademicaServiceImpl implements HistoriaAcademicaService {
 
-    private static final String AREA_FUNDAMENTACION = "FUNDAMENTACION";
-    private static final String AREA_ELECTIVAS = "ELECTIVAS";
-    private static final String AREA_INVESTIGACION = "INVESTIGACION";
-    private static final String AREA_COMPLEMENTACION = "COMPLEMENTACION";
+        private static final Long AREA_FUNDAMENTACION = 5L;
+        private static final Long AREA_ELECTIVAS = 6L;
+        private static final Long AREA_INVESTIGACION = 7L;
+        private static final String CODIGO_COMPETENCIAS_EMPRESARIALES = "OB-11";
+        private static final String VALOR_TEXTO_VACIO = "";
 
-    private static final Map<String, String> AREA_POR_CODIGO = Map.ofEntries(
-            Map.entry("M27691", AREA_FUNDAMENTACION),
-            Map.entry("M27700", AREA_FUNDAMENTACION),
-            Map.entry("M27701", AREA_FUNDAMENTACION),
-            Map.entry("M27706", AREA_INVESTIGACION),
-            Map.entry("M27708", AREA_INVESTIGACION),
-            Map.entry("M27709", AREA_INVESTIGACION),
-            Map.entry("M27712", AREA_INVESTIGACION),
-            Map.entry("OB-11", AREA_COMPLEMENTACION));
+        private final EstudianteRepository estudianteRepository;
+        private final AsignaturaCursadaRepository asignaturaCursadaRepository;
+        private final PasantiaInvestigacionRepository pasantiaInvestigacionRepository;
+        private final PublicacionInvestigacionRepository publicacionInvestigacionRepository;
+        private final PracticaDocenteRepository practicaDocenteRepository;
 
-    private final EstudianteRepository estudianteRepository;
-    private final AsignaturaCursadaRepository asignaturaCursadaRepository;
-    private final PasantiaInvestigacionRepository pasantiaInvestigacionRepository;
-    private final PublicacionInvestigacionRepository publicacionInvestigacionRepository;
-    private final PracticaDocenteRepository practicaDocenteRepository;
+        @Override
+        public HistoriaAcademicaResponseDTO obtenerHistoriaAcademica(String codigoEstudiante) {
+                Estudiante estudiante = obtenerEstudiantePorCodigo(codigoEstudiante);
+                List<AsignaturaCursadaResumen> asignaturas = asignaturaCursadaRepository
+                                .findAsignaturasResumenByEstudianteId(estudiante.getId());
 
-    @Override
-    public HistoriaAcademicaResponseDTO obtenerHistoriaAcademica(String codigoEstudiante) {
-        Estudiante estudiante = obtenerEstudiantePorCodigo(codigoEstudiante);
-        List<AsignaturaCursada> asignaturas = asignaturaCursadaRepository.findByIdEstudiante(estudiante.getId());
+                List<AsignaturaCursadaDTO> fundamentacion = filtrarAsignaturasPorArea(asignaturas, AREA_FUNDAMENTACION);
+                List<AsignaturaCursadaDTO> competenciasEmpresariales = filtrarCompetenciasEmpresariales(asignaturas);
+                List<AsignaturaCursadaDTO> electivas = filtrarElectivas(asignaturas);
+                List<AsignaturaCursadaDTO> investigacionAsignaturas = filtrarAsignaturasPorArea(asignaturas, AREA_INVESTIGACION);
 
-        List<AsignaturaCursadaDTO> fundamentacion = filtrarAsignaturasPorArea(asignaturas, AREA_FUNDAMENTACION);
-        List<AsignaturaCursadaDTO> electivas = filtrarAsignaturasPorArea(asignaturas, AREA_ELECTIVAS);
-        List<AsignaturaCursadaDTO> investigacionAsignaturas = filtrarAsignaturasPorArea(asignaturas, AREA_INVESTIGACION);
-        List<AsignaturaCursadaDTO> competenciasEmpresariales = filtrarAsignaturasPorArea(asignaturas, AREA_COMPLEMENTACION);
+                List<PasantiaInvestigacionDTO> pasantiasDto = pasantiaInvestigacionRepository
+                                .findAllByIdEstudiante(estudiante.getId())
+                                .stream()
+                                .map(HistoriaAcademicaMapper::toPasantiaDto)
+                                .toList();
+                List<PublicacionInvestigacionDTO> publicacionesDto = publicacionInvestigacionRepository
+                                .findAllByIdEstudiante(estudiante.getId())
+                                .stream()
+                                .map(HistoriaAcademicaMapper::toPublicacionDto)
+                                .toList();
+                List<PracticaDocenteDTO> practicasDocentes = practicaDocenteRepository
+                                .findAllByIdEstudiante(estudiante.getId())
+                                .stream()
+                                .map(HistoriaAcademicaMapper::toPracticaDto)
+                                .toList();
+                Integer creditosCumplidos = calcularCreditosCumplidos(
+                                fundamentacion,
+                                electivas,
+                                investigacionAsignaturas,
+                                competenciasEmpresariales,
+                                pasantiasDto,
+                                publicacionesDto,
+                                practicasDocentes);
+                String tituloTesis = estudianteRepository
+                                .findTituloTesisByEstudianteId(estudiante.getId())
+                                .orElse(VALOR_TEXTO_VACIO);
+                EstudianteRepository.DirectorCodirectorResumen directorCodirector = estudianteRepository
+                                .findDirectorCodirectorByEstudianteId(estudiante.getId())
+                                .orElse(null);
+                String directorTesis = directorCodirector == null || directorCodirector.getDirector() == null
+                                ? VALOR_TEXTO_VACIO
+                                : directorCodirector.getDirector();
+                String codirectorTesis = directorCodirector == null || directorCodirector.getCodirector() == null
+                                ? VALOR_TEXTO_VACIO
+                                : directorCodirector.getCodirector();
 
-        List<PasantiaInvestigacionDTO> pasantiasDto = pasantiaInvestigacionRepository.findByIdEstudiante(estudiante.getId())
-                .stream()
-                .map(HistoriaAcademicaMapper::toPasantiaDto)
-                .toList();
-        List<PublicacionInvestigacionDTO> publicacionesDto = publicacionInvestigacionRepository.findByIdEstudiante(estudiante.getId())
-                .stream()
-                .map(HistoriaAcademicaMapper::toPublicacionDto)
-                .toList();
-        PracticaDocenteDTO practicaDocente = practicaDocenteRepository.findByIdEstudiante(estudiante.getId())
-                .stream()
-                .findFirst()
-                .map(HistoriaAcademicaMapper::toPracticaDto)
-                .orElse(null);
-
-        return HistoriaAcademicaMapper.toHistoriaAcademicaResponse(
-                estudiante,
-                fundamentacion,
-                electivas,
-                investigacionAsignaturas,
-                pasantiasDto,
-                publicacionesDto,
-                practicaDocente,
-                competenciasEmpresariales);
-    }
-
-    private List<AsignaturaCursadaDTO> filtrarAsignaturasPorArea(List<AsignaturaCursada> asignaturas, String area) {
-        return asignaturas.stream()
-                .filter(asignatura -> area.equals(clasificarAreaPorCodigo(asignatura.getCodigoMateria())))
-                .map(HistoriaAcademicaMapper::toAsignaturaDto)
-                .toList();
-    }
-
-    private Estudiante obtenerEstudiantePorCodigo(String codigoEstudiante) {
-        return estudianteRepository.findByCodigo(codigoEstudiante)
-                .orElseThrow(() -> new IllegalArgumentException("Estudiante no encontrado"));
-    }
-
-    private String clasificarAreaPorCodigo(String codigoMateria) {
-        if (codigoMateria == null) {
-            return AREA_ELECTIVAS;
+                return HistoriaAcademicaMapper.toHistoriaAcademicaResponse(
+                                estudiante,
+                                fundamentacion,
+                                electivas,
+                                investigacionAsignaturas,
+                                pasantiasDto,
+                                publicacionesDto,
+                                practicasDocentes,
+                                competenciasEmpresariales,
+                                creditosCumplidos,
+                                tituloTesis,
+                                directorTesis,
+                                codirectorTesis);
         }
-        return AREA_POR_CODIGO.getOrDefault(codigoMateria.trim().toUpperCase(Locale.ROOT), AREA_ELECTIVAS);
-    }
+
+        private List<AsignaturaCursadaDTO> filtrarAsignaturasPorArea(List<AsignaturaCursadaResumen> asignaturas,
+                        Long area) {
+                return asignaturas.stream()
+                                .filter(asignatura -> area.equals(asignatura.getAreaFormacion()))
+                                .filter(asignatura -> !esCompetenciaEmpresarial(asignatura))
+                                .map(HistoriaAcademicaMapper::toAsignaturaDto)
+                                .toList();
+        }
+
+        private List<AsignaturaCursadaDTO> filtrarElectivas(List<AsignaturaCursadaResumen> asignaturas) {
+                return asignaturas.stream()
+                                .filter(asignatura -> AREA_ELECTIVAS.equals(asignatura.getAreaFormacion()))
+                                .filter(asignatura -> !esCompetenciaEmpresarial(asignatura))
+                                .map(HistoriaAcademicaMapper::toAsignaturaDto)
+                                .toList();
+        }
+
+        private List<AsignaturaCursadaDTO> filtrarCompetenciasEmpresariales(
+                        List<AsignaturaCursadaResumen> asignaturas) {
+                return asignaturas.stream()
+                                .filter(this::esCompetenciaEmpresarial)
+                                .map(HistoriaAcademicaMapper::toAsignaturaDto)
+                                .toList();
+        }
+
+        private Estudiante obtenerEstudiantePorCodigo(String codigoEstudiante) {
+                return estudianteRepository.findByCodigo(codigoEstudiante)
+                                .orElseThrow(() -> new IllegalArgumentException("Estudiante no encontrado"));
+        }
+
+        private boolean esCompetenciaEmpresarial(AsignaturaCursadaResumen asignatura) {
+                return asignatura.getCodigoAsignatura() != null
+                                && CODIGO_COMPETENCIAS_EMPRESARIALES
+                                                .equals(String.valueOf(asignatura.getCodigoAsignatura()));
+        }
+
+        private Integer calcularCreditosCumplidos(
+                        List<AsignaturaCursadaDTO> fundamentacion,
+                        List<AsignaturaCursadaDTO> electivas,
+                        List<AsignaturaCursadaDTO> investigacionAsignaturas,
+                        List<AsignaturaCursadaDTO> competenciasEmpresariales,
+                        List<PasantiaInvestigacionDTO> pasantias,
+                        List<PublicacionInvestigacionDTO> publicaciones,
+                        List<PracticaDocenteDTO> practicasDocentes) {
+
+                int creditosAsignaturas = sumarCreditosAsignaturasAprobadas(fundamentacion)
+                                + sumarCreditosAsignaturasAprobadas(electivas)
+                                + sumarCreditosAsignaturasAprobadas(investigacionAsignaturas)
+                                + sumarCreditosAsignaturasAprobadas(competenciasEmpresariales);
+
+                int creditosPasantias = pasantias.stream()
+                                .map(PasantiaInvestigacionDTO::getCreditosAsignados)
+                                .filter(credito -> credito != null && credito > 0)
+                                .mapToInt(Integer::intValue)
+                                .sum();
+
+                int creditosPublicaciones = publicaciones.stream()
+                                .map(PublicacionInvestigacionDTO::getCreditosAsignados)
+                                .filter(credito -> credito != null && credito > 0)
+                                .mapToInt(Integer::intValue)
+                                .sum();
+
+                int creditosPracticas = practicasDocentes.stream()
+                                .map(PracticaDocenteDTO::getCreditosAsignados)
+                                .filter(credito -> credito != null && credito > 0)
+                                .mapToInt(Integer::intValue)
+                                .sum();
+
+                return creditosAsignaturas + creditosPasantias + creditosPublicaciones + creditosPracticas;
+        }
+
+        private int sumarCreditosAsignaturasAprobadas(List<AsignaturaCursadaDTO> asignaturas) {
+                return asignaturas.stream()
+                                .filter(this::asignaturaAprobada)
+                                .map(AsignaturaCursadaDTO::getCreditos)
+                                .filter(credito -> credito != null && credito > 0)
+                                .mapToInt(Integer::intValue)
+                                .sum();
+        }
+
+        private boolean asignaturaAprobada(AsignaturaCursadaDTO asignatura) {
+                String notaDefinitiva = asignatura.getNotaDefinitiva();
+                if (notaDefinitiva == null || notaDefinitiva.isBlank()) {
+                        return false;
+                }
+
+                String notaNormalizada = notaDefinitiva.trim().toUpperCase(Locale.ROOT);
+                if ("A".equals(notaNormalizada)) {
+                        return true;
+                }
+
+                try {
+                        return Double.parseDouble(notaDefinitiva.trim().replace(',', '.')) >= 3.5d;
+                } catch (NumberFormatException ex) {
+                        return false;
+                }
+        }
 }
