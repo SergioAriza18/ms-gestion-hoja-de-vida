@@ -10,7 +10,7 @@ import com.maestria.gestion.hoja_de_vida.domain.Estudiante;
 import com.maestria.gestion.hoja_de_vida.dto.response.AsignaturaCursadaDTO;
 import com.maestria.gestion.hoja_de_vida.dto.response.HistoriaAcademicaResponseDTO;
 import com.maestria.gestion.hoja_de_vida.dto.response.PasantiaInvestigacionDTO;
-import com.maestria.gestion.hoja_de_vida.dto.response.PracticaDocenteDTO;
+import com.maestria.gestion.hoja_de_vida.dto.response.PracticaDTO;
 import com.maestria.gestion.hoja_de_vida.dto.response.PublicacionInvestigacionDTO;
 
 import com.maestria.gestion.hoja_de_vida.mapper.HistoriaAcademicaMapper;
@@ -19,7 +19,7 @@ import com.maestria.gestion.hoja_de_vida.repository.AsignaturaCursadaRepository;
 import com.maestria.gestion.hoja_de_vida.repository.AsignaturaCursadaRepository.AsignaturaCursadaResumen;
 import com.maestria.gestion.hoja_de_vida.repository.EstudianteRepository;
 import com.maestria.gestion.hoja_de_vida.repository.PasantiaInvestigacionRepository;
-import com.maestria.gestion.hoja_de_vida.repository.PracticaDocenteRepository;
+import com.maestria.gestion.hoja_de_vida.repository.PracticaRepository;
 import com.maestria.gestion.hoja_de_vida.repository.PublicacionInvestigacionRepository;
 
 import com.maestria.gestion.hoja_de_vida.service.HistoriaAcademicaService;
@@ -33,14 +33,15 @@ public class HistoriaAcademicaServiceImpl implements HistoriaAcademicaService {
         private static final Long AREA_FUNDAMENTACION = 5L;
         private static final Long AREA_ELECTIVAS = 6L;
         private static final Long AREA_INVESTIGACION = 7L;
-        private static final String CODIGO_COMPETENCIAS_EMPRESARIALES = "OB-11";
+        private static final Long AREA_COMPLEMENTACION = 8L;
+        private static final Long AREA_REQUISITOS_GRADO = 9L;
         private static final String VALOR_TEXTO_VACIO = "";
 
         private final EstudianteRepository estudianteRepository;
         private final AsignaturaCursadaRepository asignaturaCursadaRepository;
         private final PasantiaInvestigacionRepository pasantiaInvestigacionRepository;
         private final PublicacionInvestigacionRepository publicacionInvestigacionRepository;
-        private final PracticaDocenteRepository practicaDocenteRepository;
+        private final PracticaRepository PracticaRepository;
 
         @Override
         public HistoriaAcademicaResponseDTO obtenerHistoriaAcademica(String codigoEstudiante) {
@@ -49,9 +50,12 @@ public class HistoriaAcademicaServiceImpl implements HistoriaAcademicaService {
                                 .findAsignaturasResumenByEstudianteId(estudiante.getId());
 
                 List<AsignaturaCursadaDTO> fundamentacion = filtrarAsignaturasPorArea(asignaturas, AREA_FUNDAMENTACION);
-                List<AsignaturaCursadaDTO> competenciasEmpresariales = filtrarCompetenciasEmpresariales(asignaturas);
-                List<AsignaturaCursadaDTO> electivas = filtrarElectivas(asignaturas);
+                List<AsignaturaCursadaDTO> competenciasEmpresariales = filtrarAsignaturasPorArea(asignaturas,
+                                AREA_COMPLEMENTACION);
+                List<AsignaturaCursadaDTO> electivas = filtrarAsignaturasPorArea(asignaturas, AREA_ELECTIVAS);
                 List<AsignaturaCursadaDTO> investigacionAsignaturas = filtrarAsignaturasPorArea(asignaturas, AREA_INVESTIGACION);
+                List<AsignaturaCursadaDTO> requisitosGrado = filtrarAsignaturasPorArea(asignaturas,
+                                AREA_REQUISITOS_GRADO);
 
                 List<PasantiaInvestigacionDTO> pasantiasDto = pasantiaInvestigacionRepository
                                 .findAllByIdEstudiante(estudiante.getId())
@@ -63,7 +67,7 @@ public class HistoriaAcademicaServiceImpl implements HistoriaAcademicaService {
                                 .stream()
                                 .map(HistoriaAcademicaMapper::toPublicacionDto)
                                 .toList();
-                List<PracticaDocenteDTO> practicasDocentes = practicaDocenteRepository
+                List<PracticaDTO> practicasDocentes = PracticaRepository
                                 .findAllByIdEstudiante(estudiante.getId())
                                 .stream()
                                 .map(HistoriaAcademicaMapper::toPracticaDto)
@@ -101,30 +105,14 @@ public class HistoriaAcademicaServiceImpl implements HistoriaAcademicaService {
                                 creditosCumplidos,
                                 tituloTesis,
                                 directorTesis,
-                                codirectorTesis);
+                                codirectorTesis,
+                                requisitosGrado);
         }
 
         private List<AsignaturaCursadaDTO> filtrarAsignaturasPorArea(List<AsignaturaCursadaResumen> asignaturas,
                         Long area) {
                 return asignaturas.stream()
                                 .filter(asignatura -> area.equals(asignatura.getAreaFormacion()))
-                                .filter(asignatura -> !esCompetenciaEmpresarial(asignatura))
-                                .map(HistoriaAcademicaMapper::toAsignaturaDto)
-                                .toList();
-        }
-
-        private List<AsignaturaCursadaDTO> filtrarElectivas(List<AsignaturaCursadaResumen> asignaturas) {
-                return asignaturas.stream()
-                                .filter(asignatura -> AREA_ELECTIVAS.equals(asignatura.getAreaFormacion()))
-                                .filter(asignatura -> !esCompetenciaEmpresarial(asignatura))
-                                .map(HistoriaAcademicaMapper::toAsignaturaDto)
-                                .toList();
-        }
-
-        private List<AsignaturaCursadaDTO> filtrarCompetenciasEmpresariales(
-                        List<AsignaturaCursadaResumen> asignaturas) {
-                return asignaturas.stream()
-                                .filter(this::esCompetenciaEmpresarial)
                                 .map(HistoriaAcademicaMapper::toAsignaturaDto)
                                 .toList();
         }
@@ -134,12 +122,6 @@ public class HistoriaAcademicaServiceImpl implements HistoriaAcademicaService {
                                 .orElseThrow(() -> new IllegalArgumentException("Estudiante no encontrado"));
         }
 
-        private boolean esCompetenciaEmpresarial(AsignaturaCursadaResumen asignatura) {
-                return asignatura.getCodigoAsignatura() != null
-                                && CODIGO_COMPETENCIAS_EMPRESARIALES
-                                                .equals(String.valueOf(asignatura.getCodigoAsignatura()));
-        }
-
         private Integer calcularCreditosCumplidos(
                         List<AsignaturaCursadaDTO> fundamentacion,
                         List<AsignaturaCursadaDTO> electivas,
@@ -147,7 +129,7 @@ public class HistoriaAcademicaServiceImpl implements HistoriaAcademicaService {
                         List<AsignaturaCursadaDTO> competenciasEmpresariales,
                         List<PasantiaInvestigacionDTO> pasantias,
                         List<PublicacionInvestigacionDTO> publicaciones,
-                        List<PracticaDocenteDTO> practicasDocentes) {
+                        List<PracticaDTO> practicasDocentes) {
 
                 int creditosAsignaturas = sumarCreditosAsignaturasAprobadas(fundamentacion)
                                 + sumarCreditosAsignaturasAprobadas(electivas)
@@ -167,7 +149,7 @@ public class HistoriaAcademicaServiceImpl implements HistoriaAcademicaService {
                                 .sum();
 
                 int creditosPracticas = practicasDocentes.stream()
-                                .map(PracticaDocenteDTO::getCreditosAsignados)
+                                .map(PracticaDTO::getCreditosAsignados)
                                 .filter(credito -> credito != null && credito > 0)
                                 .mapToInt(Integer::intValue)
                                 .sum();

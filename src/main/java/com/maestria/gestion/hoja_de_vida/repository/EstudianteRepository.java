@@ -20,8 +20,6 @@ public interface EstudianteRepository extends JpaRepository<Estudiante, Long> {
             SELECT trabajo_grado.titulo
             FROM trabajos_grado trabajo_grado
             WHERE trabajo_grado.id_estudiante = :idEstudiante
-            ORDER BY trabajo_grado.id DESC
-            LIMIT 1
             """, nativeQuery = true)
     Optional<String> findTituloTesisByEstudianteId(@Param("idEstudiante") Long idEstudiante);
 
@@ -41,8 +39,6 @@ public interface EstudianteRepository extends JpaRepository<Estudiante, Long> {
             LEFT JOIN personas persona_codirector
                 ON persona_codirector.id = docente_codirector.id_persona
             WHERE tg.id_estudiante = :idEstudiante
-            ORDER BY tg.id DESC, gr.id DESC
-            LIMIT 1
             """, nativeQuery = true)
     Optional<DirectorCodirectorResumen> findDirectorCodirectorByEstudianteId(@Param("idEstudiante") Long idEstudiante);
 

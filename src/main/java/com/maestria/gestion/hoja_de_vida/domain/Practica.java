@@ -14,13 +14,13 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "practicas") //NO TODAS SON DOCENTE
+@Table(name = "practicas")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class PracticaDocente {
+public class Practica {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

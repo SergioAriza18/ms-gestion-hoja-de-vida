@@ -17,5 +17,6 @@ public class PublicacionInvestigacionDTO {
     private String acta;
     private String nombrePublicacion;
     private String tipoPublicacion;
+    private String categoriaIndexada;
     private LocalDate fechaAceptacion;
 }

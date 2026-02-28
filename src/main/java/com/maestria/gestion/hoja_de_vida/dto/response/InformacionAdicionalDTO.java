@@ -15,4 +15,5 @@ public class InformacionAdicionalDTO {
     private String tituloTesis;
     private String directorTesis;
     private String codirectorTesis;
+    private AreaAcademicaDTO areaRequisitosGrado;
 }

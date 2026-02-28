@@ -40,6 +40,9 @@ public class PublicacionInvestigacion {
     @Column(name = "tipopub", nullable = false)
     private String tipoPublicacion;
 
+    @Column(name = "indexadapub")
+    private String categoriaIndexada;
+
     @Column(name = "fechaaceptacion")
     private LocalDate fechaAceptacion;
 }

@@ -33,10 +33,10 @@ public interface AsignaturaCursadaRepository extends JpaRepository<AsignaturaCur
     interface AsignaturaCursadaResumen {
         Integer getAnio();
         Integer getPeriodo();
-        Long getCodigoAsignatura();
+        String getCodigoAsignatura();
         String getNombreAsignatura();
         Integer getCreditos();
-        BigDecimal getNota(); //Se debe cambiar luego
+        BigDecimal getNota();
         Long getAreaFormacion();
     }
 }
