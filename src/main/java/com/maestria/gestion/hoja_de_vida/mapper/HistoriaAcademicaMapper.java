@@ -143,9 +143,6 @@ public class HistoriaAcademicaMapper {
                 AreaAcademicaDTO competenciasEmpresarialesArea = AreaAcademicaDTO.builder()
                                 .asignaturas(competenciasEmpresariales)
                                 .build();
-                AreaAcademicaDTO requisitosGradoArea = AreaAcademicaDTO.builder()
-                                .asignaturas(requisitosGrado)
-                                .build();
 
                 InvestigacionDTO investigacion = InvestigacionDTO.builder()
                                 .asignaturas(investigacionAsignaturas)
@@ -163,7 +160,7 @@ public class HistoriaAcademicaMapper {
                                 .tituloTesis(tituloTesis)
                                 .directorTesis(directorTesis)
                                 .codirectorTesis(codirectorTesis)
-                                .areaRequisitosGrado(requisitosGradoArea)
+                                .asignaturas(requisitosGrado)
                                 .build();
 
                 EstudianteHistoriaAcademicaDTO estudianteDto = EstudianteHistoriaAcademicaDTO.builder()
@@ -188,4 +185,3 @@ public class HistoriaAcademicaMapper {
                                 .build();
         }
 }
-
