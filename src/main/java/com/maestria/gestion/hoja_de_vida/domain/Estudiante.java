@@ -43,6 +43,9 @@ public class Estudiante {
     @Column(name = "fecha_grado", nullable = false)
     private LocalDate fechaGrado;
 
+    @Column(name = "semestre_academico")
+    private Integer semestreAcademico;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_persona", nullable = false)
     private Persona persona;

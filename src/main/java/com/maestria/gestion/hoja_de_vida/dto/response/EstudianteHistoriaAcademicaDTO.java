@@ -13,7 +13,7 @@ public class EstudianteHistoriaAcademicaDTO {
 
     private String codigoEstudiante;
     private String nombreCompleto;
+    private String identificacion;
     private String correoUniversidad;
-    private String tituloPregrado;
-    private String fechaGrado;
+    private Integer semestreAcademico;
 }

@@ -131,8 +131,6 @@ public class HistoriaAcademicaMapper {
 
                 String nombreCompleto = (estudiante.getPersona().getNombre() + " "
                                 + estudiante.getPersona().getApellido()).trim();
-                String fechaGrado = estudiante.getFechaGrado() == null ? null
-                                : estudiante.getFechaGrado().format(FECHA_GRADO_FORMATTER);
 
                 AreaAcademicaDTO fundamentacionArea = AreaAcademicaDTO.builder()
                                 .asignaturas(fundamentacion)
@@ -166,9 +164,9 @@ public class HistoriaAcademicaMapper {
                 EstudianteHistoriaAcademicaDTO estudianteDto = EstudianteHistoriaAcademicaDTO.builder()
                                 .codigoEstudiante(estudiante.getCodigo())
                                 .nombreCompleto(nombreCompleto)
+                                .identificacion(estudiante.getPersona().getIdentificacion())
                                 .correoUniversidad(estudiante.getCorreoUniversidad())
-                                .tituloPregrado(estudiante.getTituloPregrado())
-                                .fechaGrado(fechaGrado)
+                                .semestreAcademico(estudiante.getSemestreAcademico())
                                 .build();
 
                 HistoriaAcademicaDTO historiaAcademica = HistoriaAcademicaDTO.builder()
