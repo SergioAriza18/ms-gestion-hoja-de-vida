@@ -10,6 +10,6 @@ public class EstudianteBusquedaDTO {
     private String codigo;
     private String nombre;
     private String apellido;
-    private String tipoIdentificacion;
+    private String periodoIngreso;
     private String identificacion;
 }

@@ -16,7 +16,7 @@ public class EstudianteBusquedaMapper {
                 .codigo(estudiante.getCodigo())
                 .nombre(persona.getNombre())
                 .apellido(persona.getApellido())
-                .tipoIdentificacion(persona.getTipoIdentificacion())
+                .periodoIngreso(estudiante.getPeriodoIngreso())
                 .identificacion(persona.getIdentificacion())
                 .build();
     }
