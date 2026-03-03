@@ -1,7 +1,6 @@
 ﻿package com.maestria.gestion.hoja_de_vida.mapper;
 
 import java.math.BigDecimal;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -25,7 +24,6 @@ import com.maestria.gestion.hoja_de_vida.repository.AsignaturaCursadaRepository.
 
 public class HistoriaAcademicaMapper {
 
-        private static final DateTimeFormatter FECHA_GRADO_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
         private static final BigDecimal NOTA_NO_APROBADA = BigDecimal.ZERO;
         private static final BigDecimal NOTA_APROBADA = BigDecimal.valueOf(5);
         private static final String NOTA_NA = "NA";
@@ -166,6 +164,7 @@ public class HistoriaAcademicaMapper {
                                 .nombreCompleto(nombreCompleto)
                                 .identificacion(estudiante.getPersona().getIdentificacion())
                                 .correoUniversidad(estudiante.getCorreoUniversidad())
+                                .periodoIngreso(estudiante.getPeriodoIngreso())
                                 .semestreAcademico(estudiante.getSemestreAcademico())
                                 .build();
 

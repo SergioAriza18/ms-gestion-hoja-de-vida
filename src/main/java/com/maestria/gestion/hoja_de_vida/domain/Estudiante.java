@@ -46,6 +46,9 @@ public class Estudiante {
     @Column(name = "semestre_academico")
     private Integer semestreAcademico;
 
+    @Column(name = "periodo_ingreso")
+    private String periodoIngreso;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_persona", nullable = false)
     private Persona persona;

@@ -15,5 +15,6 @@ public class EstudianteHistoriaAcademicaDTO {
     private String nombreCompleto;
     private String identificacion;
     private String correoUniversidad;
+    private String periodoIngreso;
     private Integer semestreAcademico;
 }
