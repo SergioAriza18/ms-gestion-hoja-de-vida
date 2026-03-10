@@ -3,6 +3,7 @@ package com.maestria.gestion.hoja_de_vida.repository;
 import com.maestria.gestion.hoja_de_vida.domain.Estudiante;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
@@ -14,7 +15,7 @@ public interface EstudianteRepository extends JpaRepository<Estudiante, Long> {
 
     Optional<Estudiante> findByPersonaIdentificacion(String identificacion);
 
-    List<Estudiante> findAllByPersonaNombreStartingWithIgnoreCase(String nombre);
+    List<Estudiante> findAllByPersonaNombreStartingWithIgnoreCase(String nombre, Sort sort);
 
     @Query(value = """
             SELECT trabajo_grado.titulo

@@ -3,6 +3,7 @@ package com.maestria.gestion.hoja_de_vida.service.impl;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.data.domain.Sort;
 
 import com.maestria.gestion.hoja_de_vida.dto.response.EstudianteBusquedaDTO;
 import com.maestria.gestion.hoja_de_vida.mapper.EstudianteBusquedaMapper;
@@ -15,11 +16,13 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class EstudianteServiceImpl implements EstudianteService {
 
+    private static final Sort ORDEN_PERIODO_INGRESO_DESC = Sort.by(Sort.Direction.DESC, "periodoIngreso");
+
     private final EstudianteRepository estudianteRepository;
 
     @Override
     public List<EstudianteBusquedaDTO> listar() {
-        return estudianteRepository.findAll()
+        return estudianteRepository.findAll(ORDEN_PERIODO_INGRESO_DESC)
                 .stream()
                 .map(EstudianteBusquedaMapper::toResponseDTO)
                 .toList();
@@ -44,7 +47,7 @@ public class EstudianteServiceImpl implements EstudianteService {
         }
 
         return estudianteRepository
-                .findAllByPersonaNombreStartingWithIgnoreCase(criterio)
+                .findAllByPersonaNombreStartingWithIgnoreCase(criterio, ORDEN_PERIODO_INGRESO_DESC)
                 .stream()
                 .map(EstudianteBusquedaMapper::toResponseDTO)
                 .toList();
