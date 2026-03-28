@@ -4,44 +4,46 @@ import java.util.List;
 import java.util.Locale;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.maestria.gestion.hoja_de_vida.domain.Estudiante;
 
 import com.maestria.gestion.hoja_de_vida.dto.response.AsignaturaCursadaDTO;
 import com.maestria.gestion.hoja_de_vida.dto.response.HistoriaAcademicaResponseDTO;
-import com.maestria.gestion.hoja_de_vida.dto.response.PasantiaInvestigacionDTO;
+import com.maestria.gestion.hoja_de_vida.dto.response.PasantiaDTO;
 import com.maestria.gestion.hoja_de_vida.dto.response.PracticaDTO;
-import com.maestria.gestion.hoja_de_vida.dto.response.PublicacionInvestigacionDTO;
+import com.maestria.gestion.hoja_de_vida.dto.response.PublicacionDTO;
 
 import com.maestria.gestion.hoja_de_vida.mapper.HistoriaAcademicaMapper;
 
 import com.maestria.gestion.hoja_de_vida.repository.AsignaturaCursadaRepository;
 import com.maestria.gestion.hoja_de_vida.repository.AsignaturaCursadaRepository.AsignaturaCursadaResumen;
 import com.maestria.gestion.hoja_de_vida.repository.EstudianteRepository;
-import com.maestria.gestion.hoja_de_vida.repository.PasantiaInvestigacionRepository;
+import com.maestria.gestion.hoja_de_vida.repository.PasantiaRepository;
 import com.maestria.gestion.hoja_de_vida.repository.PracticaRepository;
-import com.maestria.gestion.hoja_de_vida.repository.PublicacionInvestigacionRepository;
+import com.maestria.gestion.hoja_de_vida.repository.PublicacionRepository;
 
 import com.maestria.gestion.hoja_de_vida.service.HistoriaAcademicaService;
 
 import lombok.RequiredArgsConstructor;
 
+import static com.maestria.gestion.hoja_de_vida.common.HistoriaAcademicaConstants.AREA_COMPLEMENTACION;
+import static com.maestria.gestion.hoja_de_vida.common.HistoriaAcademicaConstants.AREA_ELECTIVAS;
+import static com.maestria.gestion.hoja_de_vida.common.HistoriaAcademicaConstants.AREA_FUNDAMENTACION;
+import static com.maestria.gestion.hoja_de_vida.common.HistoriaAcademicaConstants.AREA_INVESTIGACION;
+import static com.maestria.gestion.hoja_de_vida.common.HistoriaAcademicaConstants.AREA_REQUISITOS_GRADO;
+import static com.maestria.gestion.hoja_de_vida.common.HistoriaAcademicaConstants.VALOR_TEXTO_VACIO;
+
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class HistoriaAcademicaServiceImpl implements HistoriaAcademicaService {
-
-        private static final Long AREA_FUNDAMENTACION = 5L;
-        private static final Long AREA_ELECTIVAS = 6L;
-        private static final Long AREA_INVESTIGACION = 7L;
-        private static final Long AREA_COMPLEMENTACION = 8L;
-        private static final Long AREA_REQUISITOS_GRADO = 9L;
-        private static final String VALOR_TEXTO_VACIO = "";
 
         private final EstudianteRepository estudianteRepository;
         private final AsignaturaCursadaRepository asignaturaCursadaRepository;
-        private final PasantiaInvestigacionRepository pasantiaInvestigacionRepository;
-        private final PublicacionInvestigacionRepository publicacionInvestigacionRepository;
-        private final PracticaRepository PracticaRepository;
+        private final PasantiaRepository pasantiaInvestigacionRepository;
+        private final PublicacionRepository publicacionInvestigacionRepository;
+        private final PracticaRepository practicaRepository;
 
         @Override
         public HistoriaAcademicaResponseDTO obtenerHistoriaAcademica(String codigoEstudiante) {
@@ -57,17 +59,17 @@ public class HistoriaAcademicaServiceImpl implements HistoriaAcademicaService {
                 List<AsignaturaCursadaDTO> requisitosGrado = filtrarAsignaturasPorArea(asignaturas,
                                 AREA_REQUISITOS_GRADO);
 
-                List<PasantiaInvestigacionDTO> pasantiasDto = pasantiaInvestigacionRepository
+                List<PasantiaDTO> pasantiasDto = pasantiaInvestigacionRepository
                                 .findAllByIdEstudiante(estudiante.getId())
                                 .stream()
                                 .map(HistoriaAcademicaMapper::toPasantiaDto)
                                 .toList();
-                List<PublicacionInvestigacionDTO> publicacionesDto = publicacionInvestigacionRepository
+                List<PublicacionDTO> publicacionesDto = publicacionInvestigacionRepository
                                 .findAllByIdEstudiante(estudiante.getId())
                                 .stream()
                                 .map(HistoriaAcademicaMapper::toPublicacionDto)
                                 .toList();
-                List<PracticaDTO> practicasDocentes = PracticaRepository
+                List<PracticaDTO> practicasDocentes = practicaRepository
                                 .findAllByIdEstudiante(estudiante.getId())
                                 .stream()
                                 .map(HistoriaAcademicaMapper::toPracticaDto)
@@ -127,8 +129,8 @@ public class HistoriaAcademicaServiceImpl implements HistoriaAcademicaService {
                         List<AsignaturaCursadaDTO> electivas,
                         List<AsignaturaCursadaDTO> investigacionAsignaturas,
                         List<AsignaturaCursadaDTO> competenciasEmpresariales,
-                        List<PasantiaInvestigacionDTO> pasantias,
-                        List<PublicacionInvestigacionDTO> publicaciones,
+                        List<PasantiaDTO> pasantias,
+                        List<PublicacionDTO> publicaciones,
                         List<PracticaDTO> practicasDocentes) {
 
                 int creditosAsignaturas = sumarCreditosAsignaturasAprobadas(fundamentacion)
@@ -137,13 +139,13 @@ public class HistoriaAcademicaServiceImpl implements HistoriaAcademicaService {
                                 + sumarCreditosAsignaturasAprobadas(competenciasEmpresariales);
 
                 int creditosPasantias = pasantias.stream()
-                                .map(PasantiaInvestigacionDTO::getCreditosAsignados)
+                                .map(PasantiaDTO::getCreditosAsignados)
                                 .filter(credito -> credito != null && credito > 0)
                                 .mapToInt(Integer::intValue)
                                 .sum();
 
                 int creditosPublicaciones = publicaciones.stream()
-                                .map(PublicacionInvestigacionDTO::getCreditosAsignados)
+                                .map(PublicacionDTO::getCreditosAsignados)
                                 .filter(credito -> credito != null && credito > 0)
                                 .mapToInt(Integer::intValue)
                                 .sum();

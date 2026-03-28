@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Sort;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.maestria.gestion.hoja_de_vida.dto.response.EstudianteBusquedaDTO;
 import com.maestria.gestion.hoja_de_vida.mapper.EstudianteBusquedaMapper;
@@ -14,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class EstudianteServiceImpl implements EstudianteService {
 
     private static final Sort ORDEN_PERIODO_INGRESO_DESC = Sort.by(Sort.Direction.DESC, "periodoIngreso");
@@ -41,9 +43,12 @@ public class EstudianteServiceImpl implements EstudianteService {
             return List.of(EstudianteBusquedaMapper.toResponseDTO(porCodigo.get()));
         }
 
-        var porIdentificacion = estudianteRepository.findByPersonaIdentificacion(criterio);
-        if (porIdentificacion.isPresent()) {
-            return List.of(EstudianteBusquedaMapper.toResponseDTO(porIdentificacion.get()));
+        Long identificacion = parseIdentificacion(criterio);
+        if (identificacion != null) {
+            var porIdentificacion = estudianteRepository.findByPersonaIdentificacion(identificacion);
+            if (porIdentificacion.isPresent()) {
+                return List.of(EstudianteBusquedaMapper.toResponseDTO(porIdentificacion.get()));
+            }
         }
 
         return estudianteRepository
@@ -51,5 +56,18 @@ public class EstudianteServiceImpl implements EstudianteService {
                 .stream()
                 .map(EstudianteBusquedaMapper::toResponseDTO)
                 .toList();
+    }
+
+    private Long parseIdentificacion(String criterio) {
+        String normalizado = criterio.trim();
+        if (normalizado.isEmpty() || !normalizado.chars().allMatch(Character::isDigit)) {
+            return null;
+        }
+
+        try {
+            return Long.parseLong(normalizado);
+        } catch (NumberFormatException ex) {
+            return null;
+        }
     }
 }

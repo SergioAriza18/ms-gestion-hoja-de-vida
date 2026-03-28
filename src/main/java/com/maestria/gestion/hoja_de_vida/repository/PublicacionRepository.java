@@ -6,9 +6,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import com.maestria.gestion.hoja_de_vida.domain.PublicacionInvestigacion;
+import com.maestria.gestion.hoja_de_vida.domain.Publicacion;
 
-public interface PublicacionInvestigacionRepository extends JpaRepository<PublicacionInvestigacion, Long> {
+public interface PublicacionRepository extends JpaRepository<Publicacion, Long> {
 
     @Query(value = """
             SELECT publicacion.*
@@ -17,5 +17,5 @@ public interface PublicacionInvestigacionRepository extends JpaRepository<Public
                 ON publicacion.id = estudiantePublicacion.idpublicacion
             WHERE estudiantePublicacion.id_estudiante = :idEstudiante
             """, nativeQuery = true)
-    List<PublicacionInvestigacion> findAllByIdEstudiante(@Param("idEstudiante") Long idEstudiante);
+    List<Publicacion> findAllByIdEstudiante(@Param("idEstudiante") Long idEstudiante);
 }

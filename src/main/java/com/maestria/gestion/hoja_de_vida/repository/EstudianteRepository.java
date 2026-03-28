@@ -13,7 +13,7 @@ public interface EstudianteRepository extends JpaRepository<Estudiante, Long> {
 
     Optional<Estudiante> findByCodigo(String codigo);
 
-    Optional<Estudiante> findByPersonaIdentificacion(String identificacion);
+    Optional<Estudiante> findByPersonaIdentificacion(Long identificacion);
 
     List<Estudiante> findAllByPersonaNombreStartingWithIgnoreCase(String nombre, Sort sort);
 

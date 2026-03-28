@@ -17,7 +17,11 @@ public class EstudianteBusquedaMapper {
                 .nombre(persona.getNombre())
                 .apellido(persona.getApellido())
                 .periodoIngreso(estudiante.getPeriodoIngreso())
-                .identificacion(persona.getIdentificacion())
+                .identificacion(toStringOrNull(persona.getIdentificacion()))
                 .build();
+    }
+
+    private static String toStringOrNull(Long value) {
+        return value == null ? null : value.toString();
     }
 }

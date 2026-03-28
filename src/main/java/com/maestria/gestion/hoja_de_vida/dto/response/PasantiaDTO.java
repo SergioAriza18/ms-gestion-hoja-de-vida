@@ -1,7 +1,5 @@
 package com.maestria.gestion.hoja_de_vida.dto.response;
 
-import java.time.LocalDate;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -11,12 +9,10 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class PublicacionInvestigacionDTO {
+public class PasantiaDTO {
 
     private Integer creditosAsignados;
     private String acta;
-    private String nombrePublicacion;
-    private String tipoPublicacion;
-    private String categoriaIndexada;
-    private LocalDate fechaAceptacion;
+    private String fechaActa;
+    private String informePasantia;
 }

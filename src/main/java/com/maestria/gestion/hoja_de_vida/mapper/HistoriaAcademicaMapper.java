@@ -3,12 +3,11 @@
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Locale;
-import java.util.Set;
 
 import com.maestria.gestion.hoja_de_vida.domain.Estudiante;
-import com.maestria.gestion.hoja_de_vida.domain.PasantiaInvestigacion;
+import com.maestria.gestion.hoja_de_vida.domain.Pasantia;
 import com.maestria.gestion.hoja_de_vida.domain.Practica;
-import com.maestria.gestion.hoja_de_vida.domain.PublicacionInvestigacion;
+import com.maestria.gestion.hoja_de_vida.domain.Publicacion;
 import com.maestria.gestion.hoja_de_vida.dto.response.AreaAcademicaDTO;
 import com.maestria.gestion.hoja_de_vida.dto.response.AsignaturaCursadaDTO;
 import com.maestria.gestion.hoja_de_vida.dto.response.ComplementacionDTO;
@@ -17,23 +16,19 @@ import com.maestria.gestion.hoja_de_vida.dto.response.HistoriaAcademicaDTO;
 import com.maestria.gestion.hoja_de_vida.dto.response.HistoriaAcademicaResponseDTO;
 import com.maestria.gestion.hoja_de_vida.dto.response.InformacionAdicionalDTO;
 import com.maestria.gestion.hoja_de_vida.dto.response.InvestigacionDTO;
-import com.maestria.gestion.hoja_de_vida.dto.response.PasantiaInvestigacionDTO;
+import com.maestria.gestion.hoja_de_vida.dto.response.PasantiaDTO;
 import com.maestria.gestion.hoja_de_vida.dto.response.PracticaDTO;
-import com.maestria.gestion.hoja_de_vida.dto.response.PublicacionInvestigacionDTO;
+import com.maestria.gestion.hoja_de_vida.dto.response.PublicacionDTO;
 import com.maestria.gestion.hoja_de_vida.repository.AsignaturaCursadaRepository.AsignaturaCursadaResumen;
 
-public class HistoriaAcademicaMapper {
+import static com.maestria.gestion.hoja_de_vida.common.HistoriaAcademicaConstants.CODIGOS_MATERIAS_ESPECIALES;
+import static com.maestria.gestion.hoja_de_vida.common.HistoriaAcademicaConstants.NOTA_A;
+import static com.maestria.gestion.hoja_de_vida.common.HistoriaAcademicaConstants.NOTA_APROBADA;
+import static com.maestria.gestion.hoja_de_vida.common.HistoriaAcademicaConstants.NOTA_NA;
+import static com.maestria.gestion.hoja_de_vida.common.HistoriaAcademicaConstants.NOTA_NO_APROBADA;
+import static com.maestria.gestion.hoja_de_vida.common.HistoriaAcademicaConstants.NOTA_NR;
 
-        private static final BigDecimal NOTA_NO_APROBADA = BigDecimal.ZERO;
-        private static final BigDecimal NOTA_APROBADA = BigDecimal.valueOf(5);
-        private static final String NOTA_NA = "NA";
-        private static final String NOTA_A = "A";
-        private static final String NOTA_NR = "NR";
-        private static final Set<String> CODIGOS_NOTA_ESPECIAL = Set.of(
-                        "PSI POSG_MC",
-                        "M27706",
-                        "M27708",
-                        "M27709");
+public class HistoriaAcademicaMapper {
 
         private HistoriaAcademicaMapper() {
         }
@@ -81,11 +76,11 @@ public class HistoriaAcademicaMapper {
                 }
 
                 String normalizado = valor.trim().toUpperCase(Locale.ROOT);
-                return CODIGOS_NOTA_ESPECIAL.contains(normalizado);
+                return CODIGOS_MATERIAS_ESPECIALES.contains(normalizado);
         }
 
-        public static PasantiaInvestigacionDTO toPasantiaDto(PasantiaInvestigacion pasantia) {
-                return PasantiaInvestigacionDTO.builder()
+        public static PasantiaDTO toPasantiaDto(Pasantia pasantia) {
+                return PasantiaDTO.builder()
                                 .creditosAsignados(pasantia.getCreditosAsignados())
                                 .acta(pasantia.getActa())
                                 .fechaActa(pasantia.getFechaActa())
@@ -93,8 +88,8 @@ public class HistoriaAcademicaMapper {
                                 .build();
         }
 
-        public static PublicacionInvestigacionDTO toPublicacionDto(PublicacionInvestigacion publicacion) {
-                return PublicacionInvestigacionDTO.builder()
+        public static PublicacionDTO toPublicacionDto(Publicacion publicacion) {
+                return PublicacionDTO.builder()
                                 .creditosAsignados(publicacion.getCreditosAsignados())
                                 .acta(publicacion.getActa())
                                 .nombrePublicacion(publicacion.getNombrePublicacion())
@@ -117,8 +112,8 @@ public class HistoriaAcademicaMapper {
                         List<AsignaturaCursadaDTO> fundamentacion,
                         List<AsignaturaCursadaDTO> electivas,
                         List<AsignaturaCursadaDTO> investigacionAsignaturas,
-                        List<PasantiaInvestigacionDTO> pasantias,
-                        List<PublicacionInvestigacionDTO> publicaciones,
+                        List<PasantiaDTO> pasantias,
+                        List<PublicacionDTO> publicaciones,
                         List<PracticaDTO> practicasDocentes,
                         List<AsignaturaCursadaDTO> competenciasEmpresariales,
                         Integer creditosCumplidos,
@@ -162,7 +157,7 @@ public class HistoriaAcademicaMapper {
                 EstudianteHistoriaAcademicaDTO estudianteDto = EstudianteHistoriaAcademicaDTO.builder()
                                 .codigoEstudiante(estudiante.getCodigo())
                                 .nombreCompleto(nombreCompleto)
-                                .identificacion(estudiante.getPersona().getIdentificacion())
+                                .identificacion(toStringOrNull(estudiante.getPersona().getIdentificacion()))
                                 .correoUniversidad(estudiante.getCorreoUniversidad())
                                 .periodoIngreso(estudiante.getPeriodoIngreso())
                                 .semestreAcademico(estudiante.getSemestreAcademico())
@@ -180,5 +175,9 @@ public class HistoriaAcademicaMapper {
                                 .estudiante(estudianteDto)
                                 .historiaAcademica(historiaAcademica)
                                 .build();
+        }
+
+        private static String toStringOrNull(Long value) {
+                return value == null ? null : value.toString();
         }
 }

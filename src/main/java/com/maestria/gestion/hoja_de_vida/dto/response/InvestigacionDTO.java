@@ -14,6 +14,6 @@ import lombok.NoArgsConstructor;
 public class InvestigacionDTO {
 
     private List<AsignaturaCursadaDTO> asignaturas;
-    private List<PasantiaInvestigacionDTO> pasantias;
-    private List<PublicacionInvestigacionDTO> publicaciones;
+    private List<PasantiaDTO> pasantias;
+    private List<PublicacionDTO> publicaciones;
 }

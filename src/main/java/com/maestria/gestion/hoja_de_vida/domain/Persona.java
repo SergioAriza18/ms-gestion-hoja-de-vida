@@ -32,8 +32,8 @@ public class Persona {
     @Column(name = "apellido")
     private String apellido;
 
-    @Column(name = "identificacion", columnDefinition = "BIGINT")
-    private String identificacion;
+    @Column(name = "identificacion")
+    private Long identificacion;
 
     @Column(name = "tipo_identificacion")
     private String tipoIdentificacion;

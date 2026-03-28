@@ -31,16 +31,16 @@ public class Estudiante {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "codigo", nullable = false, unique = true)
+    @Column(name = "codigo", unique = true)
     private String codigo;
 
-    @Column(name = "correo_universidad", nullable = false)
+    @Column(name = "correo_universidad")
     private String correoUniversidad;
 
-    @Column(name = "titulo_pregrado", nullable = false)
+    @Column(name = "titulo_pregrado")
     private String tituloPregrado;
 
-    @Column(name = "fecha_grado", nullable = false)
+    @Column(name = "fecha_grado")
     private LocalDate fechaGrado;
 
     @Column(name = "semestre_academico")
@@ -50,6 +50,6 @@ public class Estudiante {
     private String periodoIngreso;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_persona", nullable = false)
+    @JoinColumn(name = "id_persona")
     private Persona persona;
 }
