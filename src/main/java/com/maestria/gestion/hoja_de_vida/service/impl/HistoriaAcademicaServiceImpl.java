@@ -14,6 +14,7 @@ import com.maestria.gestion.hoja_de_vida.dto.response.PasantiaDTO;
 import com.maestria.gestion.hoja_de_vida.dto.response.PracticaDTO;
 import com.maestria.gestion.hoja_de_vida.dto.response.PublicacionDTO;
 
+import com.maestria.gestion.hoja_de_vida.exception.ResourceNotFoundException;
 import com.maestria.gestion.hoja_de_vida.mapper.HistoriaAcademicaMapper;
 
 import com.maestria.gestion.hoja_de_vida.repository.AsignaturaCursadaRepository;
@@ -121,7 +122,8 @@ public class HistoriaAcademicaServiceImpl implements HistoriaAcademicaService {
 
         private Estudiante obtenerEstudiantePorCodigo(String codigoEstudiante) {
                 return estudianteRepository.findByCodigo(codigoEstudiante)
-                                .orElseThrow(() -> new IllegalArgumentException("Estudiante no encontrado"));
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "No se encontró el estudiante solicitado."));
         }
 
         private Integer calcularCreditosCumplidos(

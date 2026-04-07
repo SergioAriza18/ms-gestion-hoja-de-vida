@@ -16,3 +16,7 @@ spring:
       hibernate:
         format_sql: true
         dialect: org.hibernate.dialect.MySQL8Dialect
+
+app:
+  cors:
+    allowed-origins: http://localhost:4200
