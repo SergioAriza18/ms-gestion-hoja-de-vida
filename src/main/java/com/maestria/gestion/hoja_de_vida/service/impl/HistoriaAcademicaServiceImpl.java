@@ -1,5 +1,7 @@
 package com.maestria.gestion.hoja_de_vida.service.impl;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 import java.util.Locale;
 
@@ -56,7 +58,8 @@ public class HistoriaAcademicaServiceImpl implements HistoriaAcademicaService {
                 List<AsignaturaCursadaDTO> competenciasEmpresariales = filtrarAsignaturasPorArea(asignaturas,
                                 AREA_COMPLEMENTACION);
                 List<AsignaturaCursadaDTO> electivas = filtrarAsignaturasPorArea(asignaturas, AREA_ELECTIVAS);
-                List<AsignaturaCursadaDTO> investigacionAsignaturas = filtrarAsignaturasPorArea(asignaturas, AREA_INVESTIGACION);
+                List<AsignaturaCursadaDTO> investigacionAsignaturas = filtrarAsignaturasPorArea(asignaturas,
+                                AREA_INVESTIGACION);
                 List<AsignaturaCursadaDTO> requisitosGrado = filtrarAsignaturasPorArea(asignaturas,
                                 AREA_REQUISITOS_GRADO);
 
@@ -83,6 +86,7 @@ public class HistoriaAcademicaServiceImpl implements HistoriaAcademicaService {
                                 pasantiasDto,
                                 publicacionesDto,
                                 practicasDocentes);
+                BigDecimal promedioCarrera = calcularPromedioCarrera(asignaturas);
                 String tituloTesis = estudianteRepository
                                 .findTituloTesisByEstudianteId(estudiante.getId())
                                 .orElse(VALOR_TEXTO_VACIO);
@@ -106,6 +110,7 @@ public class HistoriaAcademicaServiceImpl implements HistoriaAcademicaService {
                                 practicasDocentes,
                                 competenciasEmpresariales,
                                 creditosCumplidos,
+                                promedioCarrera,
                                 tituloTesis,
                                 directorTesis,
                                 codirectorTesis,
@@ -159,6 +164,28 @@ public class HistoriaAcademicaServiceImpl implements HistoriaAcademicaService {
                                 .sum();
 
                 return creditosAsignaturas + creditosPasantias + creditosPublicaciones + creditosPracticas;
+        }
+
+        private BigDecimal calcularPromedioCarrera(List<AsignaturaCursadaResumen> asignaturas) {
+                BigDecimal sumaNotas = BigDecimal.ZERO;
+                int totalNotas = 0;
+
+                for (AsignaturaCursadaResumen asignatura : asignaturas) {
+                        BigDecimal nota = asignatura.getNota();
+
+                        if (nota == null) {
+                                continue;
+                        }
+
+                        sumaNotas = sumaNotas.add(nota);
+                        totalNotas++;
+                }
+
+                if (totalNotas == 0) {
+                        return null;
+                }
+
+                return sumaNotas.divide(BigDecimal.valueOf(totalNotas), 2, RoundingMode.HALF_UP);
         }
 
         private int sumarCreditosAsignaturasAprobadas(List<AsignaturaCursadaDTO> asignaturas) {

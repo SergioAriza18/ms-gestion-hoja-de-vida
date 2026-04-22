@@ -63,7 +63,12 @@ public class HistoriaAcademicaMapper {
                         }
                 }
 
-                return nota == null ? null : nota.stripTrailingZeros().toPlainString();
+                return nota == null ? null : formatearNota(nota);
+        }
+
+        private static String formatearNota(BigDecimal nota) {
+                String valorNormalizado = nota.stripTrailingZeros().toPlainString();
+                return valorNormalizado.contains(".") ? valorNormalizado : valorNormalizado + ".0";
         }
 
         private static boolean esMateriaConReglaEspecial(String codigoMateria, String nombreMateria) {
@@ -117,6 +122,7 @@ public class HistoriaAcademicaMapper {
                         List<PracticaDTO> practicasDocentes,
                         List<AsignaturaCursadaDTO> competenciasEmpresariales,
                         Integer creditosCumplidos,
+                        BigDecimal promedioCarrera,
                         String tituloTesis,
                         String directorTesis,
                         String codirectorTesis,
@@ -161,6 +167,7 @@ public class HistoriaAcademicaMapper {
                                 .correoUniversidad(estudiante.getCorreoUniversidad())
                                 .periodoIngreso(estudiante.getPeriodoIngreso())
                                 .semestreAcademico(estudiante.getSemestreAcademico())
+                                .promedioCarrera(promedioCarrera)
                                 .build();
 
                 HistoriaAcademicaDTO historiaAcademica = HistoriaAcademicaDTO.builder()

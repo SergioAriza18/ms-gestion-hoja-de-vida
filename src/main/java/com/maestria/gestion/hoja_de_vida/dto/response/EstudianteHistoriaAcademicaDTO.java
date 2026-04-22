@@ -1,5 +1,7 @@
 package com.maestria.gestion.hoja_de_vida.dto.response;
 
+import java.math.BigDecimal;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -17,4 +19,5 @@ public class EstudianteHistoriaAcademicaDTO {
     private String correoUniversidad;
     private String periodoIngreso;
     private Integer semestreAcademico;
+    private BigDecimal promedioCarrera;
 }
