@@ -101,6 +101,7 @@ public class HistoriaAcademicaMapper {
                                 .tipoPublicacion(publicacion.getTipoPublicacion())
                                 .categoriaIndexada(publicacion.getCategoriaIndexada())
                                 .fechaAceptacion(publicacion.getFechaAceptacion())
+                                .urlPublicacion(publicacion.getUrlPublicacion())
                                 .build();
         }
 

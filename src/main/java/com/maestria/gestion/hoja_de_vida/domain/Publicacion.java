@@ -45,4 +45,7 @@ public class Publicacion {
 
     @Column(name = "fechaaceptacion")
     private LocalDate fechaAceptacion;
+
+    @Column(name = "linkpublicacion")
+    private String urlPublicacion;
 }

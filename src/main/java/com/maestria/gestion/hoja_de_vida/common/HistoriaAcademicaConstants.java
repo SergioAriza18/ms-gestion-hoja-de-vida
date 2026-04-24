@@ -23,7 +23,7 @@ public final class HistoriaAcademicaConstants {
     public static final String NOTA_NR = "NR";
     public static final Set<String> CODIGOS_MATERIAS_ESPECIALES = Set.of(
             "PSI POSG_MC", // Prueba de suficiencia en Idioma
-            "M27708", // Seminario de investigacion
+            "M27708", // Seminario de investigación
             "M27709", // Trabajo de grado I
             "M27712" // Trabajo de grado II
     );
