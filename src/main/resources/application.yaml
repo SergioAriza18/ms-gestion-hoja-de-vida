@@ -3,7 +3,7 @@ spring:
     name: ms-gestion-hoja-de-vida
 
   profiles:
-    active: dev
+    default: dev
 
   mvc:
     throw-exception-if-no-handler-found: true

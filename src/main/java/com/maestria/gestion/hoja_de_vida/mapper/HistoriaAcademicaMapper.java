@@ -23,9 +23,10 @@ import com.maestria.gestion.hoja_de_vida.repository.AsignaturaCursadaRepository.
 
 import static com.maestria.gestion.hoja_de_vida.common.HistoriaAcademicaConstants.CODIGOS_MATERIAS_ESPECIALES;
 import static com.maestria.gestion.hoja_de_vida.common.HistoriaAcademicaConstants.NOTA_A;
-import static com.maestria.gestion.hoja_de_vida.common.HistoriaAcademicaConstants.NOTA_APROBADA;
+import static com.maestria.gestion.hoja_de_vida.common.HistoriaAcademicaConstants.NOTA_APROBATORIA;
+import static com.maestria.gestion.hoja_de_vida.common.HistoriaAcademicaConstants.NOTA_MAXIMA;
+import static com.maestria.gestion.hoja_de_vida.common.HistoriaAcademicaConstants.NOTA_MINIMA;
 import static com.maestria.gestion.hoja_de_vida.common.HistoriaAcademicaConstants.NOTA_NA;
-import static com.maestria.gestion.hoja_de_vida.common.HistoriaAcademicaConstants.NOTA_NO_APROBADA;
 import static com.maestria.gestion.hoja_de_vida.common.HistoriaAcademicaConstants.NOTA_NR;
 
 public class HistoriaAcademicaMapper {
@@ -55,10 +56,10 @@ public class HistoriaAcademicaMapper {
                         if (nota == null) {
                                 return NOTA_NR;
                         }
-                        if (nota.compareTo(NOTA_NO_APROBADA) == 0) {
+                        if (nota.compareTo(NOTA_MINIMA) >= 0 && nota.compareTo(NOTA_APROBATORIA) < 0) {
                                 return NOTA_NA;
                         }
-                        if (nota.compareTo(NOTA_APROBADA) == 0) {
+                        if (nota.compareTo(NOTA_APROBATORIA) >= 0 && nota.compareTo(NOTA_MAXIMA) <= 0) {
                                 return NOTA_A;
                         }
                 }
