@@ -77,6 +77,9 @@
 					<excludes>
 						<exclude>**/*IT.java</exclude>
 					</excludes>
+					<systemPropertyVariables>
+						<debug>false</debug>
+					</systemPropertyVariables>
 				</configuration>
 			</plugin>
 			<plugin>
@@ -86,6 +89,9 @@
 					<includes>
 						<include>**/*IT.java</include>
 					</includes>
+					<systemPropertyVariables>
+						<debug>false</debug>
+					</systemPropertyVariables>
 				</configuration>
 				<executions>
 					<execution>
