@@ -2,11 +2,11 @@ package com.maestria.gestion.hoja_de_vida.service;
 
 import java.util.List;
 
-import com.maestria.gestion.hoja_de_vida.dto.response.EstudianteResponseDTO;
+import com.maestria.gestion.hoja_de_vida.dto.response.EstudianteBusquedaDTO;
 
 public interface EstudianteService {
 
-    List<EstudianteResponseDTO> listar();
+    List<EstudianteBusquedaDTO> listar();
 
-    List<EstudianteResponseDTO> buscar(String valor);
+    List<EstudianteBusquedaDTO> buscar(String valor);
 }

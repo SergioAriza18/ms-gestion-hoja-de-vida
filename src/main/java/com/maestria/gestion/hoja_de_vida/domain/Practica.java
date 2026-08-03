@@ -14,27 +14,27 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "personas")
+@Table(name = "practicas")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Persona {
+public class Practica {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "nombre")
-    private String nombre;
+    @Column(name = "id_estudiante", nullable = false)
+    private Long idEstudiante;
 
-    @Column(name = "apellido")
-    private String apellido;
+    @Column(name = "creditosprac", nullable = false)
+    private Integer creditosAsignados;
 
-    @Column(name = "identificacion")
-    private Long identificacion;
+    @Column(name = "numactaprac", nullable = false)
+    private String acta;
 
-    @Column(name = "tipo_identificacion")
-    private String tipoIdentificacion;
+    @Column(name = "horastotales")
+    private Integer horas;
 }
