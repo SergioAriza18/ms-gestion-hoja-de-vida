@@ -22,6 +22,7 @@ import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
 import com.maestria.gestion.hoja_de_vida.exception.ApiError;
@@ -142,6 +143,36 @@ class GlobalExceptionHandlerTest {
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().getCodigo()).isEqualTo(ErrorCodes.INTERNAL_SERVER_ERROR);
         assertThat(response.getBody().getMensaje()).contains("error inesperado");
+    }
+
+    @Test
+    @DisplayName("Debe retornar ApiError con estado 400 cuando un parámetro tiene formato inválido")
+    void handleMethodArgumentTypeMismatchExceptionRetornaApiErrorConEstado400() {
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/hoja-vida/estudiantes/filtrar");
+        MethodArgumentTypeMismatchException exception = new MethodArgumentTypeMismatchException(
+                "cuarto", Integer.class, "semestreActual", null, new NumberFormatException());
+
+        ResponseEntity<ApiError> response = handler.handleMethodArgumentTypeMismatchException(exception, request);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getCodigo()).isEqualTo(ErrorCodes.BAD_REQUEST);
+        assertThat(response.getBody().getMensaje()).contains("semestreActual", "formato inválido");
+    }
+
+    @Test
+    @DisplayName("Debe usar un mensaje general cuando no se conoce el parámetro inválido")
+    void handleMethodArgumentTypeMismatchExceptionSinNombreRetornaMensajeGeneral() {
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/hoja-vida/estudiantes/filtrar");
+        MethodArgumentTypeMismatchException exception = new MethodArgumentTypeMismatchException(
+                "valor", Integer.class, null, null, new NumberFormatException());
+
+        ResponseEntity<ApiError> response = handler.handleMethodArgumentTypeMismatchException(exception, request);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getMensaje())
+                .isEqualTo("Uno de los parámetros tiene un formato inválido.");
     }
 
     @SuppressWarnings("unused")

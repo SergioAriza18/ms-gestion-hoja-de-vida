@@ -1,7 +1,10 @@
 package com.maestria.gestion.hoja_de_vida.unit.service.impl;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -23,6 +26,9 @@ import com.maestria.gestion.hoja_de_vida.domain.Persona;
 import com.maestria.gestion.hoja_de_vida.dto.response.EstudianteBusquedaDTO;
 import com.maestria.gestion.hoja_de_vida.repository.EstudianteRepository;
 import com.maestria.gestion.hoja_de_vida.service.impl.EstudianteServiceImpl;
+
+import static com.maestria.gestion.hoja_de_vida.common.HistoriaAcademicaConstants.CODIGO_SUFICIENCIA_IDIOMA;
+import static com.maestria.gestion.hoja_de_vida.common.HistoriaAcademicaConstants.NOTA_APROBATORIA;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Pruebas unitarias de EstudianteServiceImpl")
@@ -118,6 +124,46 @@ class EstudianteServiceImplTest {
         verify(estudianteRepository).findAllByPersonaNombreStartingWithIgnoreCase(any(String.class), any(Sort.class));
     }
 
+    @Test
+    @DisplayName("Debe filtrar estudiantes con suficiencia de idioma aprobada")
+    void filtrarPorSuficienciaAprobadaRetornaCoincidencias() {
+        Estudiante estudiante = estudiante("2024001", "Laura", "Apellido", 123456789L, "2024-1");
+        estudiante.setSemestreAcademico(2);
+        when(estudianteRepository.findAllBySuficienciaIdioma(
+                eq(true), isNull(), eq(CODIGO_SUFICIENCIA_IDIOMA), eq(NOTA_APROBATORIA)))
+                .thenReturn(List.of(estudiante));
+
+        List<EstudianteBusquedaDTO> resultado = estudianteService.filtrar(true, null);
+
+        assertThat(resultado).hasSize(1);
+        assertThat(resultado.get(0).getCodigo()).isEqualTo("2024001");
+        assertThat(resultado.get(0).getSemestreActual()).isEqualTo(2);
+    }
+
+    @Test
+    @DisplayName("Debe filtrar estudiantes por semestre actual")
+    void filtrarPorSemestreActualRetornaCoincidencias() {
+        Estudiante estudiante = estudiante("2023002", "Carlos", "Apellido", 123456789L, "2023-2");
+        estudiante.setSemestreAcademico(4);
+        when(estudianteRepository.findAllBySemestreAcademico(eq(4), any(Sort.class)))
+                .thenReturn(List.of(estudiante));
+
+        List<EstudianteBusquedaDTO> resultado = estudianteService.filtrar(null, 4);
+
+        assertThat(resultado).hasSize(1);
+        assertThat(resultado.get(0).getSemestreActual()).isEqualTo(4);
+    }
+
+    @Test
+    @DisplayName("Debe rechazar la consulta cuando no se indica ningún filtro")
+    void filtrarSinCriteriosLanzaExcepcion() {
+        assertThatThrownBy(() -> estudianteService.filtrar(null, null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Debe indicar al menos un filtro.");
+
+        verifyNoInteractions(estudianteRepository);
+    }
+
     private Estudiante estudiante(String codigo, String nombre, String apellido, Long identificacion,
             String periodoIngreso) {
         return Estudiante.builder()
@@ -130,4 +176,5 @@ class EstudianteServiceImplTest {
                         .build())
                 .build();
     }
+
 }

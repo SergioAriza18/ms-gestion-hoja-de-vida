@@ -14,6 +14,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.jdbc.SqlConfig;
 import org.springframework.test.context.jdbc.SqlGroup;
+import org.springframework.test.context.jdbc.SqlMergeMode;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.maestria.gestion.hoja_de_vida.domain.Estudiante;
@@ -27,6 +28,9 @@ import com.maestria.gestion.hoja_de_vida.repository.PasantiaRepository;
 import com.maestria.gestion.hoja_de_vida.repository.PracticaRepository;
 import com.maestria.gestion.hoja_de_vida.repository.PublicacionRepository;
 
+import static com.maestria.gestion.hoja_de_vida.common.HistoriaAcademicaConstants.CODIGO_SUFICIENCIA_IDIOMA;
+import static com.maestria.gestion.hoja_de_vida.common.HistoriaAcademicaConstants.NOTA_APROBATORIA;
+
 @SpringBootTest
 @ActiveProfiles("test")
 @SqlGroup({
@@ -35,6 +39,7 @@ import com.maestria.gestion.hoja_de_vida.repository.PublicacionRepository;
         @Sql(scripts = "/sql/hoja-vida-repository-data.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 })
 @SqlConfig(encoding = "UTF-8")
+@SqlMergeMode(SqlMergeMode.MergeMode.MERGE)
 @Transactional
 @DisplayName("Pruebas de integración de repositorios de hoja de vida")
 class HojaVidaRepositoryIT {
@@ -106,6 +111,35 @@ class HojaVidaRepositoryIT {
                 .extracting(Estudiante::getCodigo)
                 .containsExactly("2022003");
         assertThat(estudiantes.get(0).getPersona().getNombre()).isEqualTo("Ana");
+    }
+
+    @Test
+    @Sql(scripts = "/sql/hoja-vida-filter-data.sql")
+    @DisplayName("Debe filtrar estudiantes por cumplimiento de suficiencia en idioma extranjero")
+    void findAllBySuficienciaIdiomaRetornaAprobadosYPendientes() {
+        var aprobados = estudianteRepository.findAllBySuficienciaIdioma(
+                true, null, CODIGO_SUFICIENCIA_IDIOMA, NOTA_APROBATORIA);
+        var pendientes = estudianteRepository.findAllBySuficienciaIdioma(
+                false, null, CODIGO_SUFICIENCIA_IDIOMA, NOTA_APROBATORIA);
+
+        assertThat(aprobados)
+                .extracting(Estudiante::getCodigo)
+                .containsExactly("2024001");
+        assertThat(pendientes)
+                .extracting(Estudiante::getCodigo)
+                .containsExactly("2023002", "2022003");
+
+    }
+
+    @Test
+    @DisplayName("Debe filtrar estudiantes por semestre actual")
+    void findAllBySemestreAcademicoRetornaCoincidencias() {
+        var estudiantes = estudianteRepository.findAllBySemestreAcademico(
+                4, Sort.by(Sort.Direction.DESC, "periodoIngreso"));
+
+        assertThat(estudiantes).hasSize(1);
+        assertThat(estudiantes.get(0).getCodigo()).isEqualTo("2023002");
+        assertThat(estudiantes.get(0).getSemestreAcademico()).isEqualTo(4);
     }
 
     // Caso: consulta nativa de asignaturas debe mapear columnas y excluir calificaciones no definitivas.
@@ -248,4 +282,5 @@ class HojaVidaRepositoryIT {
 
         assertThat(practicas).isEmpty();
     }
+
 }

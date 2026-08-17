@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.NoHandlerFoundException;
@@ -92,6 +93,20 @@ public class GlobalExceptionHandler {
                 ? "La solicitud no es válida."
                 : ex.getMessage();
         return buildError(HttpStatus.BAD_REQUEST, ErrorCodes.BAD_REQUEST, message, request.getRequestURI());
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ApiError> handleMethodArgumentTypeMismatchException(
+            MethodArgumentTypeMismatchException ex,
+            HttpServletRequest request) {
+        String mensaje = ex.getName() == null || ex.getName().isBlank()
+                ? "Uno de los parámetros tiene un formato inválido."
+                : "El parámetro '" + ex.getName() + "' tiene un formato inválido.";
+        return buildError(
+                HttpStatus.BAD_REQUEST,
+                ErrorCodes.BAD_REQUEST,
+                mensaje,
+                request.getRequestURI());
     }
 
     @ExceptionHandler(Exception.class)

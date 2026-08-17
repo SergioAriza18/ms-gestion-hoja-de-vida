@@ -20,6 +20,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.jdbc.SqlConfig;
 import org.springframework.test.context.jdbc.SqlGroup;
+import org.springframework.test.context.jdbc.SqlMergeMode;
 import org.springframework.test.web.servlet.MockMvc;
 
 @SpringBootTest
@@ -31,6 +32,7 @@ import org.springframework.test.web.servlet.MockMvc;
         @Sql(scripts = "/sql/hoja-vida-controller-data.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 })
 @SqlConfig(encoding = "UTF-8")
+@SqlMergeMode(SqlMergeMode.MergeMode.MERGE)
 @DisplayName("Pruebas de integración de endpoints de hoja de vida")
 class HojaVidaControllerIT {
 
@@ -114,6 +116,67 @@ class HojaVidaControllerIT {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.codigo").value("BAD_REQUEST"))
                 .andExpect(jsonPath("$.mensaje", containsString("100 caracteres")));
+    }
+
+    @Test
+    @Sql(scripts = "/sql/hoja-vida-filter-data.sql")
+    @DisplayName("Debe filtrar estudiantes con suficiencia de idioma aprobada o pendiente")
+    void filtrarEstudiantesPorSuficienciaIdiomaRetornaCoincidencias() throws Exception {
+        mockMvc.perform(get("/api/hoja-vida/estudiantes/filtrar")
+                .param("suficienciaIdiomaAprobada", "true"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].codigo").value("2024001"))
+                .andExpect(jsonPath("$[0].semestreActual").value(2));
+
+        mockMvc.perform(get("/api/hoja-vida/estudiantes/filtrar")
+                .param("suficienciaIdiomaAprobada", "false"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(2)))
+                .andExpect(jsonPath("$[0].codigo").value("2023002"))
+                .andExpect(jsonPath("$[1].codigo").value("2022003"));
+    }
+
+    @Test
+    @DisplayName("Debe filtrar estudiantes por semestre actual")
+    void filtrarEstudiantesPorSemestreActualRetornaCoincidencias() throws Exception {
+        mockMvc.perform(get("/api/hoja-vida/estudiantes/filtrar")
+                .param("semestreActual", "4"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].codigo").value("2023002"))
+                .andExpect(jsonPath("$[0].semestreActual").value(4));
+    }
+
+    @Test
+    @Sql(scripts = "/sql/hoja-vida-filter-data.sql")
+    @DisplayName("Debe combinar los filtros de suficiencia y semestre actual")
+    void filtrarEstudiantesCombinandoCriteriosRetornaCoincidencias() throws Exception {
+        mockMvc.perform(get("/api/hoja-vida/estudiantes/filtrar")
+                .param("suficienciaIdiomaAprobada", "false")
+                .param("semestreActual", "1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].codigo").value("2022003"));
+    }
+
+    @Test
+    @DisplayName("Debe rechazar la consulta cuando no se indica ningún filtro")
+    void filtrarEstudiantesSinCriteriosRetornaBadRequest() throws Exception {
+        mockMvc.perform(get("/api/hoja-vida/estudiantes/filtrar"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.codigo").value("BAD_REQUEST"))
+                .andExpect(jsonPath("$.mensaje", containsString("al menos un filtro")));
+    }
+
+    @Test
+    @DisplayName("Debe rechazar un semestre actual no positivo")
+    void filtrarEstudiantesConSemestreNoPositivoRetornaBadRequest() throws Exception {
+        mockMvc.perform(get("/api/hoja-vida/estudiantes/filtrar")
+                .param("semestreActual", "0"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.codigo").value("BAD_REQUEST"))
+                .andExpect(jsonPath("$.mensaje", containsString("mayor que cero")));
     }
 
     // Caso: consulta exitosa de historia académica con datos académicos e información adicional.
@@ -201,4 +264,15 @@ class HojaVidaControllerIT {
                 .andExpect(jsonPath("$.codigo").value("METHOD_NOT_ALLOWED"))
                 .andExpect(jsonPath("$.mensaje", containsString("POST")));
     }
+
+    @Test
+    @DisplayName("Debe rechazar filtros con formato inválido")
+    void filtrarEstudiantesConFormatoInvalidoRetornaBadRequest() throws Exception {
+        mockMvc.perform(get("/api/hoja-vida/estudiantes/filtrar")
+                .param("semestreActual", "cuarto"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.codigo").value("BAD_REQUEST"))
+                .andExpect(jsonPath("$.mensaje", containsString("semestreActual")));
+    }
+
 }

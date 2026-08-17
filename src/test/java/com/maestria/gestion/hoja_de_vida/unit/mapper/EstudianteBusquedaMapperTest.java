@@ -19,6 +19,7 @@ class EstudianteBusquedaMapperTest {
         Estudiante estudiante = Estudiante.builder()
                 .codigo("2023002")
                 .periodoIngreso("2023-2")
+                .semestreAcademico(4)
                 .persona(Persona.builder()
                         .nombre("Carlos")
                         .apellido("Pérez")
@@ -33,6 +34,7 @@ class EstudianteBusquedaMapperTest {
         assertThat(resultado.getApellido()).isEqualTo("Pérez");
         assertThat(resultado.getPeriodoIngreso()).isEqualTo("2023-2");
         assertThat(resultado.getIdentificacion()).isEqualTo("987654321");
+        assertThat(resultado.getSemestreActual()).isEqualTo(4);
     }
 
     @Test
