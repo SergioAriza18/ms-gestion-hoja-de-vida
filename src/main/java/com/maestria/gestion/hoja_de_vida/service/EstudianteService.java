@@ -9,4 +9,6 @@ public interface EstudianteService {
     List<EstudianteBusquedaDTO> listar();
 
     List<EstudianteBusquedaDTO> buscar(String valor);
+
+    List<EstudianteBusquedaDTO> filtrar(Boolean suficienciaIdiomaAprobada, Integer semestreActual);
 }

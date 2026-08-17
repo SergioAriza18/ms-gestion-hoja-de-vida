@@ -18,6 +18,7 @@ public class EstudianteBusquedaMapper {
                 .apellido(persona.getApellido())
                 .periodoIngreso(estudiante.getPeriodoIngreso())
                 .identificacion(toStringOrNull(persona.getIdentificacion()))
+                .semestreActual(estudiante.getSemestreAcademico())
                 .build();
     }
 

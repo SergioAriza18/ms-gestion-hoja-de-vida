@@ -12,4 +12,5 @@ public class EstudianteBusquedaDTO {
     private String apellido;
     private String periodoIngreso;
     private String identificacion;
+    private Integer semestreActual;
 }

@@ -3,6 +3,7 @@ package com.maestria.gestion.hoja_de_vida.controller;
 import java.util.List;
 
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Positive;
 import javax.validation.constraints.Size;
 
 import org.springframework.http.ResponseEntity;
@@ -37,5 +38,14 @@ public class EstudianteController {
             @Size(max = 100, message = "El parámetro no puede superar los 100 caracteres.")
             String valor) {
         return ResponseEntity.ok(estudianteService.buscar(valor));
+    }
+
+    @GetMapping("/filtrar")
+    public ResponseEntity<List<EstudianteBusquedaDTO>> filtrar(
+            @RequestParam(required = false) Boolean suficienciaIdiomaAprobada,
+            @RequestParam(required = false)
+            @Positive(message = "El semestre actual debe ser mayor que cero.")
+            Integer semestreActual) {
+        return ResponseEntity.ok(estudianteService.filtrar(suficienciaIdiomaAprobada, semestreActual));
     }
 }

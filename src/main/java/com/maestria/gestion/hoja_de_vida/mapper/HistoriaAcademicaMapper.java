@@ -1,4 +1,4 @@
-﻿package com.maestria.gestion.hoja_de_vida.mapper;
+package com.maestria.gestion.hoja_de_vida.mapper;
 
 import java.math.BigDecimal;
 import java.util.List;

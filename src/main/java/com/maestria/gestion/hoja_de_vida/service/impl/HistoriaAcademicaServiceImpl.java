@@ -35,6 +35,7 @@ import static com.maestria.gestion.hoja_de_vida.common.HistoriaAcademicaConstant
 import static com.maestria.gestion.hoja_de_vida.common.HistoriaAcademicaConstants.AREA_FUNDAMENTACION;
 import static com.maestria.gestion.hoja_de_vida.common.HistoriaAcademicaConstants.AREA_INVESTIGACION;
 import static com.maestria.gestion.hoja_de_vida.common.HistoriaAcademicaConstants.AREA_REQUISITOS_GRADO;
+import static com.maestria.gestion.hoja_de_vida.common.HistoriaAcademicaConstants.NOTA_APROBATORIA;
 import static com.maestria.gestion.hoja_de_vida.common.HistoriaAcademicaConstants.VALOR_TEXTO_VACIO;
 
 @Service
@@ -209,7 +210,8 @@ public class HistoriaAcademicaServiceImpl implements HistoriaAcademicaService {
                 }
 
                 try {
-                        return Double.parseDouble(notaDefinitiva.trim().replace(',', '.')) >= 3.5d;
+                        BigDecimal nota = new BigDecimal(notaDefinitiva.trim().replace(',', '.'));
+                        return nota.compareTo(NOTA_APROBATORIA) >= 0;
                 } catch (NumberFormatException ex) {
                         return false;
                 }

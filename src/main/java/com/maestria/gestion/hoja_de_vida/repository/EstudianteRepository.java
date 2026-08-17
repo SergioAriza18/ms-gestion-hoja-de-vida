@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.repository.query.Param;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -16,6 +17,32 @@ public interface EstudianteRepository extends JpaRepository<Estudiante, Long> {
     Optional<Estudiante> findByPersonaIdentificacion(Long identificacion);
 
     List<Estudiante> findAllByPersonaNombreStartingWithIgnoreCase(String nombre, Sort sort);
+
+    List<Estudiante> findAllBySemestreAcademico(Integer semestreAcademico, Sort sort);
+
+    @Query(value = """
+            SELECT estudiante.*
+            FROM estudiantes estudiante
+            WHERE (:semestreActual IS NULL OR estudiante.semestre_academico = :semestreActual)
+              AND CASE WHEN EXISTS (
+                      SELECT 1
+                      FROM matricula_calificaciones calificacion
+                      INNER JOIN matriculas matricula
+                          ON matricula.id = calificacion.id_matricula
+                      INNER JOIN asignaturas asignatura
+                          ON asignatura.id = calificacion.id_asignatura
+                      WHERE matricula.id_estudiante = estudiante.id
+                        AND UPPER(TRIM(asignatura.codigo_asignatura)) = UPPER(:codigoSuficienciaIdioma)
+                        AND calificacion.es_definitiva = 1
+                        AND calificacion.nota >= :notaAprobatoria
+                  ) THEN TRUE ELSE FALSE END = :suficienciaIdiomaAprobada
+            ORDER BY estudiante.periodo_ingreso DESC
+            """, nativeQuery = true)
+    List<Estudiante> findAllBySuficienciaIdioma(
+            @Param("suficienciaIdiomaAprobada") Boolean suficienciaIdiomaAprobada,
+            @Param("semestreActual") Integer semestreActual,
+            @Param("codigoSuficienciaIdioma") String codigoSuficienciaIdioma,
+            @Param("notaAprobatoria") BigDecimal notaAprobatoria);
 
     @Query(value = """
             SELECT trabajo_grado.titulo

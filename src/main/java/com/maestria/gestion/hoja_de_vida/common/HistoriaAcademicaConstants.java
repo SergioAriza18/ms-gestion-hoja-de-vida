@@ -22,8 +22,9 @@ public final class HistoriaAcademicaConstants {
     public static final String NOTA_NA = "NA";
     public static final String NOTA_A = "A";
     public static final String NOTA_NR = "NR";
+    public static final String CODIGO_SUFICIENCIA_IDIOMA = "PSI POSG_MC";
     public static final Set<String> CODIGOS_MATERIAS_ESPECIALES = Set.of(
-            "PSI POSG_MC", // Prueba de suficiencia en Idioma
+            CODIGO_SUFICIENCIA_IDIOMA, // Prueba de suficiencia en Idioma
             "M27708", // Seminario de investigación
             "M27709", // Trabajo de grado I
             "M27712" // Trabajo de grado II
