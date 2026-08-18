@@ -22,6 +22,7 @@ import com.maestria.gestion.hoja_de_vida.mapper.HistoriaAcademicaMapper;
 import com.maestria.gestion.hoja_de_vida.repository.AsignaturaCursadaRepository;
 import com.maestria.gestion.hoja_de_vida.repository.AsignaturaCursadaRepository.AsignaturaCursadaResumen;
 import com.maestria.gestion.hoja_de_vida.repository.EstudianteRepository;
+import com.maestria.gestion.hoja_de_vida.repository.EstudianteDistincionAcademicaRepository;
 import com.maestria.gestion.hoja_de_vida.repository.PasantiaRepository;
 import com.maestria.gestion.hoja_de_vida.repository.PracticaRepository;
 import com.maestria.gestion.hoja_de_vida.repository.PublicacionRepository;
@@ -48,6 +49,7 @@ public class HistoriaAcademicaServiceImpl implements HistoriaAcademicaService {
         private final PasantiaRepository pasantiaInvestigacionRepository;
         private final PublicacionRepository publicacionInvestigacionRepository;
         private final PracticaRepository practicaRepository;
+        private final EstudianteDistincionAcademicaRepository estudianteDistincionAcademicaRepository;
 
         @Override
         public HistoriaAcademicaResponseDTO obtenerHistoriaAcademica(String codigoEstudiante) {
@@ -100,6 +102,8 @@ public class HistoriaAcademicaServiceImpl implements HistoriaAcademicaService {
                 String codirectorTesis = directorCodirector == null || directorCodirector.getCodirector() == null
                                 ? VALOR_TEXTO_VACIO
                                 : directorCodirector.getCodirector();
+                List<String> distincionesAcademicas = estudianteDistincionAcademicaRepository
+                                .findCodigosByEstudianteId(estudiante.getId());
 
                 return HistoriaAcademicaMapper.toHistoriaAcademicaResponse(
                                 estudiante,
@@ -115,7 +119,8 @@ public class HistoriaAcademicaServiceImpl implements HistoriaAcademicaService {
                                 tituloTesis,
                                 directorTesis,
                                 codirectorTesis,
-                                requisitosGrado);
+                                requisitosGrado,
+                                distincionesAcademicas);
         }
 
         private List<AsignaturaCursadaDTO> filtrarAsignaturasPorArea(List<AsignaturaCursadaResumen> asignaturas,

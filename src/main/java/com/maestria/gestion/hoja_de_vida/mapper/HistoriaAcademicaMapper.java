@@ -128,7 +128,8 @@ public class HistoriaAcademicaMapper {
                         String tituloTesis,
                         String directorTesis,
                         String codirectorTesis,
-                        List<AsignaturaCursadaDTO> requisitosGrado) {
+                        List<AsignaturaCursadaDTO> requisitosGrado,
+                        List<String> distincionesAcademicas) {
 
                 String nombreCompleto = (estudiante.getPersona().getNombre() + " "
                                 + estudiante.getPersona().getApellido()).trim();
@@ -160,6 +161,7 @@ public class HistoriaAcademicaMapper {
                                 .directorTesis(directorTesis)
                                 .codirectorTesis(codirectorTesis)
                                 .asignaturas(requisitosGrado)
+                                .distincionesAcademicas(distincionesAcademicas)
                                 .build();
 
                 EstudianteHistoriaAcademicaDTO estudianteDto = EstudianteHistoriaAcademicaDTO.builder()
