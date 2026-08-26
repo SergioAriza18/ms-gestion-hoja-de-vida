@@ -26,7 +26,7 @@ public interface AsignaturaCursadaRepository extends JpaRepository<AsignaturaCur
             INNER JOIN asignaturas asignatura
                 ON asignatura.id = calificacion.id_asignatura
             WHERE matricula.id_estudiante = :idEstudiante
-              AND (calificacion.es_definitiva = 1 OR calificacion.es_definitiva IS NULL)
+              AND calificacion.es_definitiva = 1
             """, nativeQuery = true)
     List<AsignaturaCursadaResumen> findAsignaturasResumenByEstudianteId(@Param("idEstudiante") Long idEstudiante);
 

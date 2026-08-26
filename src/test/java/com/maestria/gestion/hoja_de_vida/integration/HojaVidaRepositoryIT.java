@@ -36,7 +36,7 @@ import static com.maestria.gestion.hoja_de_vida.common.HistoriaAcademicaConstant
 @SqlGroup({
         @Sql(scripts = "/sql/hoja-vida-schema.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD),
         @Sql(scripts = "/sql/hoja-vida-common-data.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD),
-        @Sql(scripts = "/sql/hoja-vida-repository-data.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+        @Sql(scripts = "/sql/hoja-vida-academic-data.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 })
 @SqlConfig(encoding = "UTF-8")
 @SqlMergeMode(SqlMergeMode.MergeMode.MERGE)
