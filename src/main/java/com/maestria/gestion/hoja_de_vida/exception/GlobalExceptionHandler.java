@@ -12,11 +12,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -95,6 +99,21 @@ public class GlobalExceptionHandler {
         return buildError(HttpStatus.BAD_REQUEST, ErrorCodes.BAD_REQUEST, message, request.getRequestURI());
     }
 
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<ApiError> handleMissingServletRequestParameterException(
+            MissingServletRequestParameterException ex,
+            HttpServletRequest request) {
+        String parametro = ex.getParameterName();
+        String mensaje = parametro == null || parametro.isBlank()
+                ? "Falta un parámetro obligatorio en la solicitud."
+                : "El parámetro '" + parametro + "' es obligatorio.";
+        return buildError(
+                HttpStatus.BAD_REQUEST,
+                ErrorCodes.BAD_REQUEST,
+                mensaje,
+                request.getRequestURI());
+    }
+
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<ApiError> handleMethodArgumentTypeMismatchException(
             MethodArgumentTypeMismatchException ex,
@@ -111,6 +130,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> handleGenericException(Exception ex, HttpServletRequest request) {
+        log.error("Error no controlado en {} {}", request.getMethod(), request.getRequestURI(), ex);
         return buildError(
                 HttpStatus.INTERNAL_SERVER_ERROR,
                 ErrorCodes.INTERNAL_SERVER_ERROR,

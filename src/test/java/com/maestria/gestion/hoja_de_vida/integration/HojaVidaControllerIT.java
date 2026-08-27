@@ -97,13 +97,23 @@ class HojaVidaControllerIT {
 
     // Caso: parámetro de búsqueda en blanco debe activar validación y responder 400.
     @Test
-    @DisplayName("Debe rechazar búsqueda sin valor")
-    void buscarEstudianteSinValorRetornaBadRequest() throws Exception {
+    @DisplayName("Debe rechazar búsqueda con valor en blanco")
+    void buscarEstudianteConValorEnBlancoRetornaBadRequest() throws Exception {
         mockMvc.perform(get("/api/hoja-vida/estudiantes/buscar")
                 .param("valor", " "))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.codigo").value("BAD_REQUEST"))
                 .andExpect(jsonPath("$.mensaje", containsString("valor")));
+    }
+
+    @Test
+    @DisplayName("Debe rechazar búsqueda cuando falta el parámetro valor")
+    void buscarEstudianteSinParametroValorRetornaBadRequest() throws Exception {
+        mockMvc.perform(get("/api/hoja-vida/estudiantes/buscar"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.codigo").value("BAD_REQUEST"))
+                .andExpect(jsonPath("$.mensaje", containsString("valor")))
+                .andExpect(jsonPath("$.mensaje", containsString("obligatorio")));
     }
 
     // Caso: parámetro de búsqueda superior al tamaño permitido debe responder 400.
