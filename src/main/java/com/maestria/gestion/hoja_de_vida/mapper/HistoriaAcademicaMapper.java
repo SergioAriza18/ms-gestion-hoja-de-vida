@@ -171,7 +171,7 @@ public class HistoriaAcademicaMapper {
                                 .correoUniversidad(estudiante.getCorreoUniversidad())
                                 .periodoIngreso(estudiante.getPeriodoIngreso())
                                 .semestreAcademico(estudiante.getSemestreAcademico())
-                                .promedioCarrera(promedioCarrera)
+                                .promedioCarrera(promedioCarrera == null ? BigDecimal.ZERO : promedioCarrera)
                                 .build();
 
                 HistoriaAcademicaDTO historiaAcademica = HistoriaAcademicaDTO.builder()

@@ -174,13 +174,12 @@ public class EstudianteServiceImpl implements EstudianteService {
     }
 
     private Long parseIdentificacion(String criterio) {
-        String normalizado = criterio.trim();
-        if (normalizado.isEmpty() || !normalizado.chars().allMatch(Character::isDigit)) {
+        if (!criterio.chars().allMatch(Character::isDigit)) {
             return null;
         }
 
         try {
-            return Long.parseLong(normalizado);
+            return Long.parseLong(criterio);
         } catch (NumberFormatException ex) {
             return null;
         }

@@ -22,6 +22,7 @@ import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
@@ -129,6 +130,21 @@ class GlobalExceptionHandlerTest {
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().getCodigo()).isEqualTo(ErrorCodes.BAD_REQUEST);
         assertThat(response.getBody().getMensaje()).isEqualTo("La solicitud no es válida.");
+    }
+
+    @Test
+    @DisplayName("Debe retornar ApiError con estado 400 cuando falta un parámetro obligatorio")
+    void handleMissingServletRequestParameterExceptionRetornaApiErrorConEstado400() {
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/hoja-vida/estudiantes/buscar");
+        MissingServletRequestParameterException exception = new MissingServletRequestParameterException(
+                "valor", String.class.getSimpleName());
+
+        ResponseEntity<ApiError> response = handler.handleMissingServletRequestParameterException(exception, request);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getCodigo()).isEqualTo(ErrorCodes.BAD_REQUEST);
+        assertThat(response.getBody().getMensaje()).contains("valor", "obligatorio");
     }
 
     @Test

@@ -12,19 +12,9 @@ spring:
   jpa:
     hibernate:
       ddl-auto: create-drop
-    open-in-view: false
     show-sql: false
     database-platform: org.hibernate.dialect.H2Dialect
 
 app:
   cors:
     allowed-origins: http://localhost:4200
-
-logging:
-  level:
-    root: warn
-    com.maestria.gestion.hoja_de_vida: info
-    org.hibernate: warn
-    org.springframework: warn
-    org.springframework.boot.test.context: warn
-    org.springframework.web.servlet.PageNotFound: error

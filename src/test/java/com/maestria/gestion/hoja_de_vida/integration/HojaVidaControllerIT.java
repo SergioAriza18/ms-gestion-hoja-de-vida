@@ -5,7 +5,6 @@ import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.not;
-import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -29,7 +28,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @SqlGroup({
         @Sql(scripts = "/sql/hoja-vida-schema.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD),
         @Sql(scripts = "/sql/hoja-vida-common-data.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD),
-        @Sql(scripts = "/sql/hoja-vida-controller-data.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+        @Sql(scripts = "/sql/hoja-vida-academic-data.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 })
 @SqlConfig(encoding = "UTF-8")
 @SqlMergeMode(SqlMergeMode.MergeMode.MERGE)
@@ -98,13 +97,23 @@ class HojaVidaControllerIT {
 
     // Caso: parámetro de búsqueda en blanco debe activar validación y responder 400.
     @Test
-    @DisplayName("Debe rechazar búsqueda sin valor")
-    void buscarEstudianteSinValorRetornaBadRequest() throws Exception {
+    @DisplayName("Debe rechazar búsqueda con valor en blanco")
+    void buscarEstudianteConValorEnBlancoRetornaBadRequest() throws Exception {
         mockMvc.perform(get("/api/hoja-vida/estudiantes/buscar")
                 .param("valor", " "))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.codigo").value("BAD_REQUEST"))
                 .andExpect(jsonPath("$.mensaje", containsString("valor")));
+    }
+
+    @Test
+    @DisplayName("Debe rechazar búsqueda cuando falta el parámetro valor")
+    void buscarEstudianteSinParametroValorRetornaBadRequest() throws Exception {
+        mockMvc.perform(get("/api/hoja-vida/estudiantes/buscar"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.codigo").value("BAD_REQUEST"))
+                .andExpect(jsonPath("$.mensaje", containsString("valor")))
+                .andExpect(jsonPath("$.mensaje", containsString("obligatorio")));
     }
 
     // Caso: parámetro de búsqueda superior al tamaño permitido debe responder 400.
@@ -217,7 +226,7 @@ class HojaVidaControllerIT {
         mockMvc.perform(get("/api/hoja-vida/estudiantes/{codigo}/historia-academica", "2022003"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.estudiante.codigoEstudiante").value("2022003"))
-                .andExpect(jsonPath("$.estudiante.promedioCarrera").value(nullValue()))
+                .andExpect(jsonPath("$.estudiante.promedioCarrera").value(0))
                 .andExpect(jsonPath("$.historiaAcademica.fundamentacion.asignaturas", hasSize(0)))
                 .andExpect(jsonPath("$.historiaAcademica.electivas.asignaturas", hasSize(0)))
                 .andExpect(jsonPath("$.historiaAcademica.investigacion.asignaturas", hasSize(0)))

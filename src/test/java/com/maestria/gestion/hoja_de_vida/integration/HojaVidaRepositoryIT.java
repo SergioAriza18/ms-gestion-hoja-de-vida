@@ -36,7 +36,7 @@ import static com.maestria.gestion.hoja_de_vida.common.HistoriaAcademicaConstant
 @SqlGroup({
         @Sql(scripts = "/sql/hoja-vida-schema.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD),
         @Sql(scripts = "/sql/hoja-vida-common-data.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD),
-        @Sql(scripts = "/sql/hoja-vida-repository-data.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+        @Sql(scripts = "/sql/hoja-vida-academic-data.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 })
 @SqlConfig(encoding = "UTF-8")
 @SqlMergeMode(SqlMergeMode.MergeMode.MERGE)
@@ -152,7 +152,7 @@ class HojaVidaRepositoryIT {
         assertThat(asignaturas).hasSize(6);
         assertThat(asignaturas)
                 .extracting(AsignaturaCursadaResumen::getCodigoAsignatura)
-                .containsExactly("M10001", "M10002", "M27708", "M10003", "M27712", "M27709")
+                .containsExactly("M10001", "M10002", "M10003", "M27708", "M27709", "M27712")
                 .doesNotContain("M99999");
 
         AsignaturaCursadaResumen primeraAsignatura = asignaturas.get(0);

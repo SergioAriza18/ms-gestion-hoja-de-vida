@@ -3,7 +3,7 @@ package com.maestria.gestion.hoja_de_vida.service.impl;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
-import java.util.Locale;
+import java.util.Set;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,6 +44,12 @@ import static com.maestria.gestion.hoja_de_vida.common.HistoriaAcademicaConstant
 @Transactional(readOnly = true)
 public class HistoriaAcademicaServiceImpl implements HistoriaAcademicaService {
 
+        private static final Set<Long> AREAS_CON_CREDITOS = Set.of(
+                        AREA_FUNDAMENTACION,
+                        AREA_ELECTIVAS,
+                        AREA_INVESTIGACION,
+                        AREA_COMPLEMENTACION);
+
         private final EstudianteRepository estudianteRepository;
         private final AsignaturaCursadaRepository asignaturaCursadaRepository;
         private final PasantiaRepository pasantiaInvestigacionRepository;
@@ -54,57 +60,60 @@ public class HistoriaAcademicaServiceImpl implements HistoriaAcademicaService {
         @Override
         public HistoriaAcademicaResponseDTO obtenerHistoriaAcademica(String codigoEstudiante) {
                 Estudiante estudiante = obtenerEstudiantePorCodigo(codigoEstudiante);
-                List<AsignaturaCursadaResumen> asignaturas = asignaturaCursadaRepository
-                                .findAsignaturasResumenByEstudianteId(estudiante.getId());
+                Long idEstudiante = estudiante.getId();
 
-                List<AsignaturaCursadaDTO> fundamentacion = filtrarAsignaturasPorArea(asignaturas, AREA_FUNDAMENTACION);
-                List<AsignaturaCursadaDTO> competenciasEmpresariales = filtrarAsignaturasPorArea(asignaturas,
-                                AREA_COMPLEMENTACION);
-                List<AsignaturaCursadaDTO> electivas = filtrarAsignaturasPorArea(asignaturas, AREA_ELECTIVAS);
-                List<AsignaturaCursadaDTO> investigacionAsignaturas = filtrarAsignaturasPorArea(asignaturas,
-                                AREA_INVESTIGACION);
-                List<AsignaturaCursadaDTO> requisitosGrado = filtrarAsignaturasPorArea(asignaturas,
-                                AREA_REQUISITOS_GRADO);
+                List<AsignaturaCursadaResumen> asignaturas = asignaturaCursadaRepository
+                                .findAsignaturasResumenByEstudianteId(idEstudiante);
+
+                List<AsignaturaCursadaDTO> fundamentacion = filtrarAsignaturasPorArea(
+                                asignaturas, AREA_FUNDAMENTACION);
+
+                List<AsignaturaCursadaDTO> competenciasEmpresariales = filtrarAsignaturasPorArea(
+                                asignaturas, AREA_COMPLEMENTACION);
+
+                List<AsignaturaCursadaDTO> electivas = filtrarAsignaturasPorArea(
+                                asignaturas, AREA_ELECTIVAS);
+
+                List<AsignaturaCursadaDTO> investigacionAsignaturas = filtrarAsignaturasPorArea(
+                                asignaturas, AREA_INVESTIGACION);
+
+                List<AsignaturaCursadaDTO> requisitosGrado = filtrarAsignaturasPorArea(
+                                asignaturas, AREA_REQUISITOS_GRADO);
 
                 List<PasantiaDTO> pasantiasDto = pasantiaInvestigacionRepository
-                                .findAllByIdEstudiante(estudiante.getId())
+                                .findAllByIdEstudiante(idEstudiante)
                                 .stream()
                                 .map(HistoriaAcademicaMapper::toPasantiaDto)
                                 .toList();
                 List<PublicacionDTO> publicacionesDto = publicacionInvestigacionRepository
-                                .findAllByIdEstudiante(estudiante.getId())
+                                .findAllByIdEstudiante(idEstudiante)
                                 .stream()
                                 .map(HistoriaAcademicaMapper::toPublicacionDto)
                                 .toList();
                 List<PracticaDTO> practicasDocentes = practicaRepository
-                                .findAllByIdEstudiante(estudiante.getId())
+                                .findAllByIdEstudiante(idEstudiante)
                                 .stream()
                                 .map(HistoriaAcademicaMapper::toPracticaDto)
                                 .toList();
                 Integer creditosCumplidos = calcularCreditosCumplidos(
-                                fundamentacion,
-                                electivas,
-                                investigacionAsignaturas,
-                                competenciasEmpresariales,
+                                asignaturas,
                                 pasantiasDto,
                                 publicacionesDto,
                                 practicasDocentes);
                 BigDecimal promedioCarrera = calcularPromedioCarrera(asignaturas);
                 String tituloTesis = estudianteRepository
-                                .findTituloTesisByEstudianteId(estudiante.getId())
+                                .findTituloTesisByEstudianteId(idEstudiante)
                                 .orElse(VALOR_TEXTO_VACIO);
-                EstudianteRepository.DirectorCodirectorResumen directorCodirector = estudianteRepository
-                                .findDirectorCodirectorByEstudianteId(estudiante.getId())
-                                .orElse(null);
-                String directorTesis = directorCodirector == null || directorCodirector.getDirector() == null
-                                ? VALOR_TEXTO_VACIO
-                                : directorCodirector.getDirector();
-                String codirectorTesis = directorCodirector == null || directorCodirector.getCodirector() == null
-                                ? VALOR_TEXTO_VACIO
-                                : directorCodirector.getCodirector();
+                var directorCodirector = estudianteRepository
+                                .findDirectorCodirectorByEstudianteId(idEstudiante);
+                String directorTesis = directorCodirector
+                                .map(EstudianteRepository.DirectorCodirectorResumen::getDirector)
+                                .orElse(VALOR_TEXTO_VACIO);
+                String codirectorTesis = directorCodirector
+                                .map(EstudianteRepository.DirectorCodirectorResumen::getCodirector)
+                                .orElse(VALOR_TEXTO_VACIO);
                 List<String> distincionesAcademicas = estudianteDistincionAcademicaRepository
                                 .findCodigosByEstudianteId(estudiante.getId());
-
                 return HistoriaAcademicaMapper.toHistoriaAcademicaResponse(
                                 estudiante,
                                 fundamentacion,
@@ -138,18 +147,19 @@ public class HistoriaAcademicaServiceImpl implements HistoriaAcademicaService {
         }
 
         private Integer calcularCreditosCumplidos(
-                        List<AsignaturaCursadaDTO> fundamentacion,
-                        List<AsignaturaCursadaDTO> electivas,
-                        List<AsignaturaCursadaDTO> investigacionAsignaturas,
-                        List<AsignaturaCursadaDTO> competenciasEmpresariales,
+                        List<AsignaturaCursadaResumen> asignaturas,
                         List<PasantiaDTO> pasantias,
                         List<PublicacionDTO> publicaciones,
                         List<PracticaDTO> practicasDocentes) {
 
-                int creditosAsignaturas = sumarCreditosAsignaturasAprobadas(fundamentacion)
-                                + sumarCreditosAsignaturasAprobadas(electivas)
-                                + sumarCreditosAsignaturasAprobadas(investigacionAsignaturas)
-                                + sumarCreditosAsignaturasAprobadas(competenciasEmpresariales);
+                int creditosAsignaturas = asignaturas.stream()
+                                .filter(asignatura -> AREAS_CON_CREDITOS.contains(asignatura.getAreaFormacion()))
+                                .filter(asignatura -> asignatura.getNota() != null
+                                                && asignatura.getNota().compareTo(NOTA_APROBATORIA) >= 0)
+                                .map(AsignaturaCursadaResumen::getCreditos)
+                                .filter(credito -> credito != null && credito > 0)
+                                .mapToInt(Integer::intValue)
+                                .sum();
 
                 int creditosPasantias = pasantias.stream()
                                 .map(PasantiaDTO::getCreditosAsignados)
@@ -194,31 +204,4 @@ public class HistoriaAcademicaServiceImpl implements HistoriaAcademicaService {
                 return sumaNotas.divide(BigDecimal.valueOf(totalNotas), 2, RoundingMode.HALF_UP);
         }
 
-        private int sumarCreditosAsignaturasAprobadas(List<AsignaturaCursadaDTO> asignaturas) {
-                return asignaturas.stream()
-                                .filter(this::asignaturaAprobada)
-                                .map(AsignaturaCursadaDTO::getCreditos)
-                                .filter(credito -> credito != null && credito > 0)
-                                .mapToInt(Integer::intValue)
-                                .sum();
-        }
-
-        private boolean asignaturaAprobada(AsignaturaCursadaDTO asignatura) {
-                String notaDefinitiva = asignatura.getNotaDefinitiva();
-                if (notaDefinitiva == null || notaDefinitiva.isBlank()) {
-                        return false;
-                }
-
-                String notaNormalizada = notaDefinitiva.trim().toUpperCase(Locale.ROOT);
-                if ("A".equals(notaNormalizada)) {
-                        return true;
-                }
-
-                try {
-                        BigDecimal nota = new BigDecimal(notaDefinitiva.trim().replace(',', '.'));
-                        return nota.compareTo(NOTA_APROBATORIA) >= 0;
-                } catch (NumberFormatException ex) {
-                        return false;
-                }
-        }
 }
