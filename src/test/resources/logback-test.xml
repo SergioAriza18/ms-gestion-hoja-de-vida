@@ -14,6 +14,7 @@
     <logger name="org.hibernate.SQL" level="WARN"/>
     <logger name="org.springframework" level="WARN"/>
     <logger name="org.springframework.test" level="WARN"/>
+    <logger name="org.springframework.web.servlet.PageNotFound" level="ERROR"/>
 
     <root level="WARN">
         <appender-ref ref="CONSOLE"/>
