@@ -22,8 +22,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Sort;
 
 import com.maestria.gestion.hoja_de_vida.domain.Estudiante;
+import com.maestria.gestion.hoja_de_vida.domain.EstudianteDistincionAcademica;
 import com.maestria.gestion.hoja_de_vida.domain.Persona;
+import com.maestria.gestion.hoja_de_vida.domain.TipoDistincionAcademica;
 import com.maestria.gestion.hoja_de_vida.dto.response.EstudianteBusquedaDTO;
+import com.maestria.gestion.hoja_de_vida.exception.ResourceNotFoundException;
+import com.maestria.gestion.hoja_de_vida.repository.EstudianteDistincionAcademicaRepository;
 import com.maestria.gestion.hoja_de_vida.repository.EstudianteRepository;
 import com.maestria.gestion.hoja_de_vida.service.impl.EstudianteServiceImpl;
 
@@ -36,6 +40,9 @@ class EstudianteServiceImplTest {
 
     @Mock
     private EstudianteRepository estudianteRepository;
+
+    @Mock
+    private EstudianteDistincionAcademicaRepository estudianteDistincionAcademicaRepository;
 
     @InjectMocks
     private EstudianteServiceImpl estudianteService;
@@ -162,6 +169,37 @@ class EstudianteServiceImplTest {
                 .hasMessage("Debe indicar al menos un filtro.");
 
         verifyNoInteractions(estudianteRepository);
+    }
+
+    @Test
+    @DisplayName("Debe retornar el PDF de una distinción registrada")
+    void obtenerResolucionDistincionRegistradaRetornaPdf() {
+        byte[] pdf = "%PDF-prueba".getBytes();
+        when(estudianteDistincionAcademicaRepository
+                .findByEstudianteCodigoAndDistincionCodigo("2024001", "EXCELENCIA_ACADEMICA"))
+                .thenReturn(Optional.of(EstudianteDistincionAcademica.builder()
+                        .resolucionPdf(pdf)
+                        .build()));
+
+        byte[] resultado = estudianteService.obtenerResolucionDistincion(
+                "2024001",
+                TipoDistincionAcademica.EXCELENCIA_ACADEMICA);
+
+        assertThat(resultado).isSameAs(pdf);
+    }
+
+    @Test
+    @DisplayName("Debe informar cuando una distinción no tiene resolución registrada")
+    void obtenerResolucionDistincionNoRegistradaLanzaExcepcion() {
+        when(estudianteDistincionAcademicaRepository
+                .findByEstudianteCodigoAndDistincionCodigo("2024001", "MENCION_HONOR_TRABAJO_GRADO"))
+                .thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> estudianteService.obtenerResolucionDistincion(
+                "2024001",
+                TipoDistincionAcademica.MENCION_HONOR_TRABAJO_GRADO))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessage("No se encontró la resolución de la distinción solicitada.");
     }
 
     private Estudiante estudiante(String codigo, String nombre, String apellido, Long identificacion,

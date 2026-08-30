@@ -24,6 +24,7 @@ import com.maestria.gestion.hoja_de_vida.dto.response.HistoriaAcademicaResponseD
 import com.maestria.gestion.hoja_de_vida.exception.ResourceNotFoundException;
 import com.maestria.gestion.hoja_de_vida.repository.AsignaturaCursadaRepository;
 import com.maestria.gestion.hoja_de_vida.repository.AsignaturaCursadaRepository.AsignaturaCursadaResumen;
+import com.maestria.gestion.hoja_de_vida.repository.EstudianteDistincionAcademicaRepository;
 import com.maestria.gestion.hoja_de_vida.repository.EstudianteRepository;
 import com.maestria.gestion.hoja_de_vida.repository.EstudianteRepository.DirectorCodirectorResumen;
 import com.maestria.gestion.hoja_de_vida.repository.PasantiaRepository;
@@ -49,6 +50,9 @@ class HistoriaAcademicaServiceImplTest {
 
     @Mock
     private PracticaRepository practicaRepository;
+
+    @Mock
+    private EstudianteDistincionAcademicaRepository estudianteDistincionAcademicaRepository;
 
     @InjectMocks
     private HistoriaAcademicaServiceImpl historiaAcademicaService;
@@ -88,6 +92,8 @@ class HistoriaAcademicaServiceImplTest {
         when(estudianteRepository.findDirectorCodirectorByEstudianteId(1L))
                 .thenReturn(Optional.of(directorCodirector("Diana Torres", "Andrés Ruiz")));
 
+        when(estudianteDistincionAcademicaRepository.findCodigosByEstudianteId(1L)).thenReturn(List.of());
+
         HistoriaAcademicaResponseDTO resultado = historiaAcademicaService.obtenerHistoriaAcademica("2024001");
 
         assertThat(resultado.getEstudiante().getCodigoEstudiante()).isEqualTo("2024001");
@@ -121,6 +127,8 @@ class HistoriaAcademicaServiceImplTest {
         when(practicaRepository.findAllByIdEstudiante(1L)).thenReturn(List.of());
         when(estudianteRepository.findTituloTesisByEstudianteId(1L)).thenReturn(Optional.empty());
         when(estudianteRepository.findDirectorCodirectorByEstudianteId(1L)).thenReturn(Optional.empty());
+
+        when(estudianteDistincionAcademicaRepository.findCodigosByEstudianteId(1L)).thenReturn(List.of());
 
         HistoriaAcademicaResponseDTO resultado = historiaAcademicaService.obtenerHistoriaAcademica("2024001");
 
