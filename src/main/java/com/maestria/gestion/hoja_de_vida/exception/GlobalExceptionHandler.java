@@ -10,12 +10,16 @@ import javax.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.MultipartException;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
 import lombok.extern.slf4j.Slf4j;
@@ -111,6 +115,50 @@ public class GlobalExceptionHandler {
                 HttpStatus.BAD_REQUEST,
                 ErrorCodes.BAD_REQUEST,
                 mensaje,
+                request.getRequestURI());
+    }
+
+    @ExceptionHandler(MissingServletRequestPartException.class)
+    public ResponseEntity<ApiError> handleMissingServletRequestPartException(
+            MissingServletRequestPartException ex,
+            HttpServletRequest request) {
+        return buildError(
+                HttpStatus.BAD_REQUEST,
+                ErrorCodes.BAD_REQUEST,
+                "El archivo '" + ex.getRequestPartName() + "' es obligatorio.",
+                request.getRequestURI());
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ApiError> handleMaxUploadSizeExceededException(
+            MaxUploadSizeExceededException ex,
+            HttpServletRequest request) {
+        return buildError(
+                HttpStatus.PAYLOAD_TOO_LARGE,
+                ErrorCodes.PAYLOAD_TOO_LARGE,
+                "La resolución en PDF no puede superar los 5 MB.",
+                request.getRequestURI());
+    }
+
+    @ExceptionHandler(MultipartException.class)
+    public ResponseEntity<ApiError> handleMultipartException(
+            MultipartException ex,
+            HttpServletRequest request) {
+        return buildError(
+                HttpStatus.BAD_REQUEST,
+                ErrorCodes.BAD_REQUEST,
+                "No fue posible procesar el archivo adjunto.",
+                request.getRequestURI());
+    }
+
+    @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
+    public ResponseEntity<ApiError> handleHttpMediaTypeNotSupportedException(
+            HttpMediaTypeNotSupportedException ex,
+            HttpServletRequest request) {
+        return buildError(
+                HttpStatus.UNSUPPORTED_MEDIA_TYPE,
+                ErrorCodes.UNSUPPORTED_MEDIA_TYPE,
+                "El tipo de contenido de la solicitud no es compatible.",
                 request.getRequestURI());
     }
 
