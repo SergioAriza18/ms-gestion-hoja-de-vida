@@ -22,4 +22,8 @@ public interface EstudianteService {
             String numeroResolucion,
             LocalDate fechaResolucion,
             MultipartFile resolucion);
+
+    byte[] obtenerResolucionDistincion(
+            String codigoEstudiante,
+            TipoDistincionAcademica tipo);
 }

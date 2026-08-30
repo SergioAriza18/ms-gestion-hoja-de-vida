@@ -1,6 +1,7 @@
 package com.maestria.gestion.hoja_de_vida.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -12,6 +13,10 @@ public interface EstudianteDistincionAcademicaRepository
         extends JpaRepository<EstudianteDistincionAcademica, Long> {
 
     boolean existsByEstudianteIdAndDistincionId(Long idEstudiante, Long idDistincion);
+
+    Optional<EstudianteDistincionAcademica> findByEstudianteCodigoAndDistincionCodigo(
+            String codigoEstudiante,
+            String codigoDistincion);
 
     @Query("""
             SELECT distincion.codigo

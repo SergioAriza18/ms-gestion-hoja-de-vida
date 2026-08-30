@@ -132,6 +132,12 @@ public class HistoriaAcademicaServiceImpl implements HistoriaAcademicaService {
                                 distincionesAcademicas);
         }
 
+        @Override
+        public BigDecimal consultarPromedioCarrera(Long idEstudiante) {
+                return calcularPromedioCarrera(
+                                asignaturaCursadaRepository.findAsignaturasResumenByEstudianteId(idEstudiante));
+        }
+
         private List<AsignaturaCursadaDTO> filtrarAsignaturasPorArea(List<AsignaturaCursadaResumen> asignaturas,
                         Long area) {
                 return asignaturas.stream()

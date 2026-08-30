@@ -5,6 +5,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Sort;
 import org.springframework.transaction.annotation.Transactional;
@@ -120,26 +121,40 @@ public class EstudianteServiceImpl implements EstudianteService {
             throw new IllegalArgumentException("El estudiante ya tiene registrada esta distinción académica.");
         }
 
-        validarElegibilidadExcelencia(codigoEstudiante, tipo);
         byte[] archivoResolucion = validarYLeerPdf(resolucion);
+        validarElegibilidadExcelencia(estudiante.getId(), tipo);
 
-        estudianteDistincionAcademicaRepository.save(EstudianteDistincionAcademica.builder()
-                .estudiante(estudiante)
-                .distincion(distincion)
-                .numeroResolucion(numeroResolucion.trim())
-                .fechaResolucion(fechaResolucion)
-                .resolucionPdf(archivoResolucion)
-                .build());
+        try {
+            estudianteDistincionAcademicaRepository.saveAndFlush(EstudianteDistincionAcademica.builder()
+                    .estudiante(estudiante)
+                    .distincion(distincion)
+                    .numeroResolucion(numeroResolucion.trim())
+                    .fechaResolucion(fechaResolucion)
+                    .resolucionPdf(archivoResolucion)
+                    .build());
+        } catch (DataIntegrityViolationException ex) {
+            throw new IllegalArgumentException(
+                    "El estudiante ya tiene registrada esta distinción académica.", ex);
+        }
     }
 
-    private void validarElegibilidadExcelencia(String codigoEstudiante, TipoDistincionAcademica tipo) {
+    @Override
+    public byte[] obtenerResolucionDistincion(
+            String codigoEstudiante,
+            TipoDistincionAcademica tipo) {
+        return estudianteDistincionAcademicaRepository
+                .findByEstudianteCodigoAndDistincionCodigo(codigoEstudiante, tipo.name())
+                .map(EstudianteDistincionAcademica::getResolucionPdf)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "No se encontró la resolución de la distinción solicitada."));
+    }
+
+    private void validarElegibilidadExcelencia(Long idEstudiante, TipoDistincionAcademica tipo) {
         if (tipo != TipoDistincionAcademica.EXCELENCIA_ACADEMICA) {
             return;
         }
 
-        BigDecimal promedio = historiaAcademicaService.obtenerHistoriaAcademica(codigoEstudiante)
-                .getEstudiante()
-                .getPromedioCarrera();
+        BigDecimal promedio = historiaAcademicaService.consultarPromedioCarrera(idEstudiante);
         if (promedio == null || promedio.compareTo(PROMEDIO_MINIMO_EXCELENCIA) < 0) {
             throw new IllegalArgumentException(
                     "El estudiante no cumple el promedio mínimo de 4.8 para la distinción de excelencia académica.");
@@ -153,7 +168,11 @@ public class EstudianteServiceImpl implements EstudianteService {
         if (resolucion.getSize() > TAMANO_MAXIMO_PDF) {
             throw new IllegalArgumentException("La resolución en PDF no puede superar los 5 MB.");
         }
-        if (!"application/pdf".equalsIgnoreCase(resolucion.getContentType())) {
+        String tipoContenido = resolucion.getContentType();
+        if (tipoContenido != null
+                && !tipoContenido.isBlank()
+                && !"application/pdf".equalsIgnoreCase(tipoContenido)
+                && !"application/octet-stream".equalsIgnoreCase(tipoContenido)) {
             throw new IllegalArgumentException("El archivo de resolución debe ser un PDF.");
         }
 

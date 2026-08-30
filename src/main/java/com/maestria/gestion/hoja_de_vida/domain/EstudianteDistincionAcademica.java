@@ -12,7 +12,6 @@ import javax.persistence.JoinColumn;
 import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -21,11 +20,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(
-        name = "estudiantes_distinciones_academicas",
-        uniqueConstraints = @UniqueConstraint(
-                name = "uk_estudiante_distincion_academica",
-                columnNames = { "id_estudiante", "id_distincion_academica" }))
+@Table(name = "estudiantes_distinciones_academicas")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -52,6 +47,6 @@ public class EstudianteDistincionAcademica {
     private LocalDate fechaResolucion;
 
     @Lob
-    @Column(name = "resolucion_pdf", nullable = false, columnDefinition = "LONGBLOB")
+    @Column(name = "resolucion_pdf", nullable = false, columnDefinition = "MEDIUMBLOB")
     private byte[] resolucionPdf;
 }

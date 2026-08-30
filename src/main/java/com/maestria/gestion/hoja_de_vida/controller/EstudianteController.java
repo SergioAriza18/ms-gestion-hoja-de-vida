@@ -5,12 +5,14 @@ import java.util.List;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.PastOrPresent;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.Size;
 
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -65,13 +67,16 @@ public class EstudianteController {
             @Size(max = 30, message = "El código no puede superar los 30 caracteres.")
             @Pattern(regexp = "^[A-Za-z0-9-]+$", message = "El código tiene un formato inválido.")
             String codigoEstudiante,
-            @RequestParam @NotNull TipoDistincionAcademica tipo,
+            @RequestParam
+            @NotNull(message = "El tipo de distinción es obligatorio.")
+            TipoDistincionAcademica tipo,
             @RequestParam
             @NotBlank(message = "El número de resolución es obligatorio.")
             @Size(max = 100, message = "El número de resolución no puede superar los 100 caracteres.")
             String numeroResolucion,
             @RequestParam
             @NotNull(message = "La fecha de resolución es obligatoria.")
+            @PastOrPresent(message = "La fecha de resolución no puede ser futura.")
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
             LocalDate fechaResolucion,
             @RequestParam @NotNull(message = "La resolución en PDF es obligatoria.")
@@ -83,5 +88,23 @@ public class EstudianteController {
                 fechaResolucion,
                 resolucion);
         return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
+    @GetMapping(value = "/{codigoEstudiante}/distinciones/{tipo}/resolucion", produces = MediaType.APPLICATION_PDF_VALUE)
+    public ResponseEntity<byte[]> obtenerResolucionDistincion(
+            @PathVariable
+            @Size(max = 30, message = "El código no puede superar los 30 caracteres.")
+            @Pattern(regexp = "^[A-Za-z0-9-]+$", message = "El código tiene un formato inválido.")
+            String codigoEstudiante,
+            @PathVariable TipoDistincionAcademica tipo) {
+        byte[] resolucion = estudianteService.obtenerResolucionDistincion(codigoEstudiante, tipo);
+
+        return ResponseEntity.ok()
+                .header(
+                        HttpHeaders.CONTENT_DISPOSITION,
+                        "inline; filename=\"resolucion-" + tipo.name().toLowerCase() + ".pdf\"")
+                .contentLength(resolucion.length)
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(resolucion);
     }
 }
