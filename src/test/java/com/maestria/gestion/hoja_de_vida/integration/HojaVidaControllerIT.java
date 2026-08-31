@@ -204,7 +204,10 @@ class HojaVidaControllerIT {
                 .andExpect(jsonPath("$.historiaAcademica.informacionAdicional.creditosCumplidos").value(14))
                 .andExpect(jsonPath("$.historiaAcademica.informacionAdicional.tituloTesis").value("Sistema académico"))
                 .andExpect(jsonPath("$.historiaAcademica.informacionAdicional.directorTesis").value("Diana Torres"))
-                .andExpect(jsonPath("$.historiaAcademica.informacionAdicional.codirectorTesis").value("Andrés Ruiz"));
+                .andExpect(jsonPath("$.historiaAcademica.informacionAdicional.codirectorTesis").value("Andrés Ruiz"))
+                .andExpect(jsonPath(
+                        "$.historiaAcademica.informacionAdicional.distincionesAcademicas",
+                        hasSize(0)));
     }
 
     // Caso: historia académica debe mapear reglas especiales y omitir calificaciones no definitivas.
@@ -233,7 +236,10 @@ class HojaVidaControllerIT {
                 .andExpect(jsonPath("$.historiaAcademica.informacionAdicional.creditosCumplidos").value(0))
                 .andExpect(jsonPath("$.historiaAcademica.informacionAdicional.tituloTesis").value(""))
                 .andExpect(jsonPath("$.historiaAcademica.informacionAdicional.directorTesis").value(""))
-                .andExpect(jsonPath("$.historiaAcademica.informacionAdicional.codirectorTesis").value(""));
+                .andExpect(jsonPath("$.historiaAcademica.informacionAdicional.codirectorTesis").value(""))
+                .andExpect(jsonPath(
+                        "$.historiaAcademica.informacionAdicional.distincionesAcademicas",
+                        hasSize(0)));
     }
 
     // Caso: estudiante inexistente para historia académica debe responder 404.

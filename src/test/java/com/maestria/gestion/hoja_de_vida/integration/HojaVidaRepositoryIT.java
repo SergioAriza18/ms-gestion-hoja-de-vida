@@ -1,8 +1,10 @@
 package com.maestria.gestion.hoja_de_vida.integration;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import org.junit.jupiter.api.DisplayName;
@@ -10,12 +12,14 @@ import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.Sort;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.jdbc.SqlConfig;
 import org.springframework.test.context.jdbc.SqlGroup;
 import org.springframework.test.context.jdbc.SqlMergeMode;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import com.maestria.gestion.hoja_de_vida.domain.Estudiante;
 import com.maestria.gestion.hoja_de_vida.domain.Pasantia;
@@ -23,6 +27,7 @@ import com.maestria.gestion.hoja_de_vida.domain.Practica;
 import com.maestria.gestion.hoja_de_vida.domain.Publicacion;
 import com.maestria.gestion.hoja_de_vida.repository.AsignaturaCursadaRepository;
 import com.maestria.gestion.hoja_de_vida.repository.AsignaturaCursadaRepository.AsignaturaCursadaResumen;
+import com.maestria.gestion.hoja_de_vida.repository.EstudianteDistincionAcademicaRepository;
 import com.maestria.gestion.hoja_de_vida.repository.EstudianteRepository;
 import com.maestria.gestion.hoja_de_vida.repository.PasantiaRepository;
 import com.maestria.gestion.hoja_de_vida.repository.PracticaRepository;
@@ -58,6 +63,12 @@ class HojaVidaRepositoryIT {
 
     @Autowired
     private PublicacionRepository publicacionRepository;
+
+    @Autowired
+    private EstudianteDistincionAcademicaRepository estudianteDistincionAcademicaRepository;
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
     // Caso: consulta derivada debe encontrar estudiante por código exacto.
     @Test
@@ -281,6 +292,39 @@ class HojaVidaRepositoryIT {
         List<Practica> practicas = practicaRepository.findAllByIdEstudiante(3L);
 
         assertThat(practicas).isEmpty();
+    }
+
+    @Test
+    @Sql(scripts = "/sql/hoja-vida-distinction-data.sql")
+    @DisplayName("Debe consultar las distinciones y resoluciones asociadas al estudiante")
+    void findDistincionesByEstudianteRetornaCodigosOrdenadosYResolucion() {
+        assertThat(estudianteDistincionAcademicaRepository.findCodigosByEstudianteId(1L))
+                .containsExactly("EXCELENCIA_ACADEMICA", "MENCION_HONOR_TRABAJO_GRADO");
+        assertThat(estudianteDistincionAcademicaRepository
+                .existsByEstudianteIdAndDistincionId(1L, 2L))
+                .isTrue();
+        assertThat(estudianteDistincionAcademicaRepository
+                .findByEstudianteCodigoAndDistincionCodigo("2024001", "MENCION_HONOR_TRABAJO_GRADO"))
+                .get()
+                .satisfies(registro -> {
+                    assertThat(registro.getNumeroResolucion()).isEqualTo("RES-MEN-001");
+                    assertThat(registro.getResolucionPdf()).containsExactly(
+                            "%PDF-1.4\nmencion".getBytes(StandardCharsets.UTF_8));
+                });
+    }
+
+    @Test
+    @Sql(scripts = "/sql/hoja-vida-distinction-data.sql")
+    @DisplayName("Debe impedir distinciones duplicadas para un mismo estudiante")
+    void insertarDistincionDuplicadaViolaRestriccionUnica() {
+        assertThatThrownBy(() -> jdbcTemplate.update("""
+                INSERT INTO estudiantes_distinciones_academicas
+                    (id, id_estudiante, id_distincion_academica,
+                     numero_resolucion, fecha_resolucion, resolucion_pdf)
+                VALUES
+                    (3, 1, 1, 'RES-DUP-001', DATE '2025-03-10', X'255044462D312E34')
+                """))
+                .isInstanceOf(DataIntegrityViolationException.class);
     }
 
 }
