@@ -27,3 +27,6 @@ app:
   archivos:
     resolucion:
       tamano-maximo: ${HOJA_VIDA_RESOLUTION_MAX_SIZE:5MB}
+  security:
+    jwt:
+      secret: ${HOJA_VIDA_JWT_SECRET}

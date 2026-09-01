@@ -19,6 +19,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.FieldError;
@@ -227,6 +228,22 @@ class GlobalExceptionHandlerTest {
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().getCodigo()).isEqualTo(ErrorCodes.INTERNAL_SERVER_ERROR);
         assertThat(response.getBody().getMensaje()).contains("error inesperado");
+    }
+
+    @Test
+    @DisplayName("Debe retornar ApiError con estado 403 cuando el usuario no tiene permisos")
+    void handleAccessDeniedExceptionRetornaApiErrorConEstado403() {
+        MockHttpServletRequest request = new MockHttpServletRequest(
+                "GET", "/api/hoja-vida/estudiantes");
+
+        ResponseEntity<ApiError> response = handler.handleAccessDeniedException(
+                new AccessDeniedException("Acceso denegado."),
+                request);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getCodigo()).isEqualTo(ErrorCodes.FORBIDDEN);
+        assertThat(response.getBody().getMensaje()).contains("permisos");
     }
 
     @Test

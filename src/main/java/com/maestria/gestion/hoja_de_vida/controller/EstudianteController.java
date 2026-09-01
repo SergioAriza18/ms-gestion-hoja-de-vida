@@ -15,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -39,11 +40,13 @@ public class EstudianteController {
     private final EstudianteService estudianteService;
 
     @GetMapping
+    @PreAuthorize("hasRole('COORDINADOR')")
     public ResponseEntity<List<EstudianteBusquedaDTO>> listar() {
         return ResponseEntity.ok(estudianteService.listar());
     }
 
     @GetMapping("/buscar")
+    @PreAuthorize("hasRole('COORDINADOR')")
     public ResponseEntity<List<EstudianteBusquedaDTO>> buscar(
             @RequestParam
             @NotBlank(message = "El parámetro es obligatorio.")
@@ -53,6 +56,7 @@ public class EstudianteController {
     }
 
     @GetMapping("/filtrar")
+    @PreAuthorize("hasRole('COORDINADOR')")
     public ResponseEntity<List<EstudianteBusquedaDTO>> filtrar(
             @RequestParam(required = false) Boolean suficienciaIdiomaAprobada,
             @RequestParam(required = false)
@@ -62,6 +66,7 @@ public class EstudianteController {
     }
 
     @PostMapping(value = "/{codigoEstudiante}/distinciones", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('COORDINADOR')")
     public ResponseEntity<Void> registrarDistincion(
             @PathVariable
             @Size(max = 30, message = "El código no puede superar los 30 caracteres.")
@@ -91,6 +96,7 @@ public class EstudianteController {
     }
 
     @GetMapping(value = "/{codigoEstudiante}/distinciones/{tipo}/resolucion", produces = MediaType.APPLICATION_PDF_VALUE)
+    @PreAuthorize("@hojaVidaAuthorization.puedeConsultar(authentication, #codigoEstudiante)")
     public ResponseEntity<byte[]> obtenerResolucionDistincion(
             @PathVariable
             @Size(max = 30, message = "El código no puede superar los 30 caracteres.")
