@@ -5,11 +5,12 @@ import lombok.Data;
 
 @Data
 @Builder
-public class EstudianteResponseDTO {
+public class EstudianteBusquedaDTO {
 
     private String codigo;
     private String nombre;
     private String apellido;
-    private String tipoIdentificacion;
+    private String periodoIngreso;
     private String identificacion;
+    private Integer semestreActual;
 }
