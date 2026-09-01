@@ -26,6 +26,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.jdbc.SqlConfig;
@@ -46,6 +47,7 @@ import com.maestria.gestion.hoja_de_vida.repository.EstudianteDistincionAcademic
 @SqlConfig(encoding = "UTF-8")
 @SqlMergeMode(SqlMergeMode.MergeMode.MERGE)
 @DisplayName("Pruebas de integración de distinciones académicas")
+@WithMockUser(roles = "COORDINADOR")
 class EstudianteDistincionControllerIT {
 
     private static final byte[] PDF_PRUEBA = crearPdfValido();

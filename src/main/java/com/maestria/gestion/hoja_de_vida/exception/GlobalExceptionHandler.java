@@ -9,6 +9,7 @@ import javax.validation.ConstraintViolationException;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
@@ -173,6 +174,17 @@ public class GlobalExceptionHandler {
                 HttpStatus.BAD_REQUEST,
                 ErrorCodes.BAD_REQUEST,
                 mensaje,
+                request.getRequestURI());
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApiError> handleAccessDeniedException(
+            AccessDeniedException ex,
+            HttpServletRequest request) {
+        return buildError(
+                HttpStatus.FORBIDDEN,
+                ErrorCodes.FORBIDDEN,
+                "No tiene permisos para realizar esta operación.",
                 request.getRequestURI());
     }
 
