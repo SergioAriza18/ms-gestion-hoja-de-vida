@@ -98,7 +98,7 @@ class HistoriaAcademicaServiceImplTest {
 
         assertThat(resultado.getEstudiante().getCodigoEstudiante()).isEqualTo("2024001");
         assertThat(resultado.getEstudiante().getNombreCompleto()).isEqualTo("Laura Gómez");
-        assertThat(resultado.getEstudiante().getPromedioCarrera()).isEqualByComparingTo(new BigDecimal("4.18"));
+        assertThat(resultado.getEstudiante().getPromedioCarrera()).isEqualByComparingTo(new BigDecimal("3.63"));
 
         assertThat(resultado.getHistoriaAcademica().getFundamentacion().getAsignaturas()).hasSize(1);
         assertThat(resultado.getHistoriaAcademica().getElectivas().getAsignaturas()).hasSize(1);
@@ -117,7 +117,7 @@ class HistoriaAcademicaServiceImplTest {
     }
 
     @Test
-    @DisplayName("Debe retornar promedio cero y textos vacíos cuando no hay información adicional")
+    @DisplayName("Debe retornar promedio nulo y textos vacíos cuando no hay información adicional")
     void obtenerHistoriaAcademicaSinNotasNiInformacionAdicionalRetornaValoresPorDefecto() {
         Estudiante estudiante = estudiante();
         when(estudianteRepository.findByCodigo("2024001")).thenReturn(Optional.of(estudiante));
@@ -132,7 +132,7 @@ class HistoriaAcademicaServiceImplTest {
 
         HistoriaAcademicaResponseDTO resultado = historiaAcademicaService.obtenerHistoriaAcademica("2024001");
 
-        assertThat(resultado.getEstudiante().getPromedioCarrera()).isEqualByComparingTo(BigDecimal.ZERO);
+        assertThat(resultado.getEstudiante().getPromedioCarrera()).isNull();
         assertThat(resultado.getHistoriaAcademica().getInformacionAdicional().getCreditosCumplidos()).isZero();
         assertThat(resultado.getHistoriaAcademica().getInformacionAdicional().getTituloTesis()).isEmpty();
         assertThat(resultado.getHistoriaAcademica().getInformacionAdicional().getDirectorTesis()).isEmpty();

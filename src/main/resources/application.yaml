@@ -20,5 +20,10 @@ spring:
 
   servlet:
     multipart:
-      max-file-size: 5MB
-      max-request-size: 6MB
+      max-file-size: ${HOJA_VIDA_RESOLUTION_MAX_SIZE:5MB}
+      max-request-size: ${HOJA_VIDA_MAX_REQUEST_SIZE:6MB}
+
+app:
+  archivos:
+    resolucion:
+      tamano-maximo: ${HOJA_VIDA_RESOLUTION_MAX_SIZE:5MB}

@@ -136,7 +136,7 @@ public class GlobalExceptionHandler {
         return buildError(
                 HttpStatus.PAYLOAD_TOO_LARGE,
                 ErrorCodes.PAYLOAD_TOO_LARGE,
-                "La resolución en PDF no puede superar los 5 MB.",
+                "La resolución en PDF supera el tamaño máximo permitido.",
                 request.getRequestURI());
     }
 

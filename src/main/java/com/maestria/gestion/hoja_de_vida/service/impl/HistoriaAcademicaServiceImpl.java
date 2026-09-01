@@ -38,6 +38,7 @@ import static com.maestria.gestion.hoja_de_vida.common.HistoriaAcademicaConstant
 import static com.maestria.gestion.hoja_de_vida.common.HistoriaAcademicaConstants.AREA_REQUISITOS_GRADO;
 import static com.maestria.gestion.hoja_de_vida.common.HistoriaAcademicaConstants.NOTA_APROBATORIA;
 import static com.maestria.gestion.hoja_de_vida.common.HistoriaAcademicaConstants.VALOR_TEXTO_VACIO;
+import static com.maestria.gestion.hoja_de_vida.common.HistoriaAcademicaRules.esMateriaEspecial;
 
 @Service
 @RequiredArgsConstructor
@@ -195,7 +196,9 @@ public class HistoriaAcademicaServiceImpl implements HistoriaAcademicaService {
                 for (AsignaturaCursadaResumen asignatura : asignaturas) {
                         BigDecimal nota = asignatura.getNota();
 
-                        if (nota == null) {
+                        if (nota == null || esMateriaEspecial(
+                                        asignatura.getCodigoAsignatura(),
+                                        asignatura.getNombreAsignatura())) {
                                 continue;
                         }
 

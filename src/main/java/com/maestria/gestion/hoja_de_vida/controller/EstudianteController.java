@@ -103,6 +103,9 @@ public class EstudianteController {
                 .header(
                         HttpHeaders.CONTENT_DISPOSITION,
                         "inline; filename=\"resolucion-" + tipo.name().toLowerCase() + ".pdf\"")
+                .header(HttpHeaders.CACHE_CONTROL, "no-store, no-cache, must-revalidate, private, max-age=0")
+                .header(HttpHeaders.PRAGMA, "no-cache")
+                .header("X-Content-Type-Options", "nosniff")
                 .contentLength(resolucion.length)
                 .contentType(MediaType.APPLICATION_PDF)
                 .body(resolucion);

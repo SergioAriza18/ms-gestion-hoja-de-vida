@@ -11,9 +11,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,8 +48,7 @@ import com.maestria.gestion.hoja_de_vida.repository.EstudianteDistincionAcademic
 @DisplayName("Pruebas de integración de distinciones académicas")
 class EstudianteDistincionControllerIT {
 
-    private static final byte[] PDF_PRUEBA = "%PDF-1.4\nresolucion-prueba"
-            .getBytes(StandardCharsets.UTF_8);
+    private static final byte[] PDF_PRUEBA = crearPdfValido();
     private static final byte[] PDF_MENCION_REGISTRADA = "%PDF-1.4\nmencion"
             .getBytes(StandardCharsets.UTF_8);
 
@@ -174,6 +177,23 @@ class EstudianteDistincionControllerIT {
     }
 
     @Test
+    @DisplayName("Debe rechazar un archivo con firma PDF pero estructura corrupta")
+    void registrarDistincionConFirmaPdfPeroEstructuraCorruptaRetornaBadRequest() throws Exception {
+        MockMultipartFile archivo = new MockMultipartFile(
+                "resolucion", "resolucion.pdf", MediaType.APPLICATION_PDF_VALUE,
+                "%PDF-1.7\ncontenido-corrupto".getBytes(StandardCharsets.UTF_8));
+
+        mockMvc.perform(multipart("/api/hoja-vida/estudiantes/{codigo}/distinciones", "2023002")
+                .file(archivo)
+                .param("tipo", "MENCION_HONOR_TRABAJO_GRADO")
+                .param("numeroResolucion", "RES-MEN-018")
+                .param("fechaResolucion", "2025-03-10"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.codigo").value("BAD_REQUEST"))
+                .andExpect(jsonPath("$.mensaje", containsString("PDF válido")));
+    }
+
+    @Test
     @DisplayName("Debe rechazar el registro cuando falta la resolución PDF")
     void registrarDistincionSinArchivoRetornaBadRequest() throws Exception {
         mockMvc.perform(multipart("/api/hoja-vida/estudiantes/{codigo}/distinciones", "2023002")
@@ -251,7 +271,12 @@ class EstudianteDistincionControllerIT {
                         "inline; filename=\"resolucion-mencion_honor_trabajo_grado.pdf\""))
                 .andExpect(header().string(
                         HttpHeaders.CONTENT_LENGTH,
-                        String.valueOf(PDF_MENCION_REGISTRADA.length)));
+                        String.valueOf(PDF_MENCION_REGISTRADA.length)))
+                .andExpect(header().string(
+                        HttpHeaders.CACHE_CONTROL,
+                        "no-store, no-cache, must-revalidate, private, max-age=0"))
+                .andExpect(header().string(HttpHeaders.PRAGMA, "no-cache"))
+                .andExpect(header().string("X-Content-Type-Options", "nosniff"));
     }
 
     @Test
@@ -291,5 +316,15 @@ class EstudianteDistincionControllerIT {
                 PDF_PRUEBA);
     }
 
-}
+    private static byte[] crearPdfValido() {
+        try (PDDocument documento = new PDDocument();
+                ByteArrayOutputStream salida = new ByteArrayOutputStream()) {
+            documento.addPage(new PDPage());
+            documento.save(salida);
+            return salida.toByteArray();
+        } catch (IOException ex) {
+            throw new IllegalStateException("No fue posible crear el PDF de prueba.", ex);
+        }
+    }
 
+}

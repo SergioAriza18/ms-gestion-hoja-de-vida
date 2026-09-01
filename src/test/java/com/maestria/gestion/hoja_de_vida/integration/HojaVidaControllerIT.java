@@ -4,6 +4,7 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.Matchers.not;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -196,7 +197,7 @@ class HojaVidaControllerIT {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.estudiante.codigoEstudiante").value("2024001"))
                 .andExpect(jsonPath("$.estudiante.nombreCompleto").value("Laura Gómez"))
-                .andExpect(jsonPath("$.estudiante.promedioCarrera").value(4.05))
+                .andExpect(jsonPath("$.estudiante.promedioCarrera").value(3.63))
                 .andExpect(jsonPath("$.historiaAcademica.fundamentacion.asignaturas[0].notaDefinitiva").value("4.0"))
                 .andExpect(jsonPath("$.historiaAcademica.electivas.asignaturas[0].notaDefinitiva").value("3.4"))
                 .andExpect(jsonPath("$.historiaAcademica.investigacion.asignaturas[0].notaDefinitiva").value("A"))
@@ -229,7 +230,7 @@ class HojaVidaControllerIT {
         mockMvc.perform(get("/api/hoja-vida/estudiantes/{codigo}/historia-academica", "2022003"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.estudiante.codigoEstudiante").value("2022003"))
-                .andExpect(jsonPath("$.estudiante.promedioCarrera").value(0))
+                .andExpect(jsonPath("$.estudiante.promedioCarrera").value(nullValue()))
                 .andExpect(jsonPath("$.historiaAcademica.fundamentacion.asignaturas", hasSize(0)))
                 .andExpect(jsonPath("$.historiaAcademica.electivas.asignaturas", hasSize(0)))
                 .andExpect(jsonPath("$.historiaAcademica.investigacion.asignaturas", hasSize(0)))

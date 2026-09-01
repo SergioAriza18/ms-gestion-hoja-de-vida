@@ -5,6 +5,8 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
+import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.pdmodel.PDDocument;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Sort;
@@ -15,6 +17,7 @@ import com.maestria.gestion.hoja_de_vida.domain.DistincionAcademica;
 import com.maestria.gestion.hoja_de_vida.domain.Estudiante;
 import com.maestria.gestion.hoja_de_vida.domain.EstudianteDistincionAcademica;
 import com.maestria.gestion.hoja_de_vida.domain.TipoDistincionAcademica;
+import com.maestria.gestion.hoja_de_vida.config.ArchivoResolucionProperties;
 import com.maestria.gestion.hoja_de_vida.dto.response.EstudianteBusquedaDTO;
 import com.maestria.gestion.hoja_de_vida.exception.ResourceNotFoundException;
 import com.maestria.gestion.hoja_de_vida.mapper.EstudianteBusquedaMapper;
@@ -36,12 +39,11 @@ import static com.maestria.gestion.hoja_de_vida.common.HistoriaAcademicaConstant
 public class EstudianteServiceImpl implements EstudianteService {
 
     private static final Sort ORDEN_PERIODO_INGRESO_DESC = Sort.by(Sort.Direction.DESC, "periodoIngreso");
-    private static final long TAMANO_MAXIMO_PDF = 5L * 1024 * 1024;
-
     private final EstudianteRepository estudianteRepository;
     private final DistincionAcademicaRepository distincionAcademicaRepository;
     private final EstudianteDistincionAcademicaRepository estudianteDistincionAcademicaRepository;
     private final HistoriaAcademicaService historiaAcademicaService;
+    private final ArchivoResolucionProperties archivoResolucionProperties;
 
     @Override
     public List<EstudianteBusquedaDTO> listar() {
@@ -165,8 +167,8 @@ public class EstudianteServiceImpl implements EstudianteService {
         if (resolucion.isEmpty()) {
             throw new IllegalArgumentException("La resolución en PDF es obligatoria.");
         }
-        if (resolucion.getSize() > TAMANO_MAXIMO_PDF) {
-            throw new IllegalArgumentException("La resolución en PDF no puede superar los 5 MB.");
+        if (resolucion.getSize() > archivoResolucionProperties.getTamanoMaximo().toBytes()) {
+            throw new IllegalArgumentException("La resolución en PDF supera el tamaño máximo permitido.");
         }
         String tipoContenido = resolucion.getContentType();
         if (tipoContenido != null
@@ -176,20 +178,35 @@ public class EstudianteServiceImpl implements EstudianteService {
             throw new IllegalArgumentException("El archivo de resolución debe ser un PDF.");
         }
 
+        byte[] contenido;
         try {
-            byte[] contenido = resolucion.getBytes();
-            if (contenido.length < 5
-                    || contenido[0] != '%'
-                    || contenido[1] != 'P'
-                    || contenido[2] != 'D'
-                    || contenido[3] != 'F'
-                    || contenido[4] != '-') {
-                throw new IllegalArgumentException("El archivo de resolución debe ser un PDF válido.");
-            }
-            return contenido;
+            contenido = resolucion.getBytes();
         } catch (IOException ex) {
             throw new IllegalArgumentException("No fue posible leer la resolución en PDF.", ex);
         }
+
+        if (!tieneFirmaPdf(contenido)) {
+            throw new IllegalArgumentException("El archivo de resolución debe ser un PDF válido.");
+        }
+
+        try (PDDocument documento = Loader.loadPDF(contenido)) {
+            if (documento.isEncrypted() || documento.getNumberOfPages() == 0) {
+                throw new IllegalArgumentException("El archivo de resolución debe ser un PDF válido y legible.");
+            }
+        } catch (IOException ex) {
+            throw new IllegalArgumentException("El archivo de resolución debe ser un PDF válido.", ex);
+        }
+
+        return contenido;
+    }
+
+    private boolean tieneFirmaPdf(byte[] contenido) {
+        return contenido.length >= 5
+                && contenido[0] == '%'
+                && contenido[1] == 'P'
+                && contenido[2] == 'D'
+                && contenido[3] == 'F'
+                && contenido[4] == '-';
     }
 
     private Long parseIdentificacion(String criterio) {

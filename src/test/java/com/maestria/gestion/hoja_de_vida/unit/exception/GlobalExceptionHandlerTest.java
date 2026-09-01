@@ -180,7 +180,7 @@ class GlobalExceptionHandlerTest {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.PAYLOAD_TOO_LARGE);
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().getCodigo()).isEqualTo(ErrorCodes.PAYLOAD_TOO_LARGE);
-        assertThat(response.getBody().getMensaje()).contains("5 MB");
+        assertThat(response.getBody().getMensaje()).contains("tamaño máximo permitido");
     }
 
     @Test

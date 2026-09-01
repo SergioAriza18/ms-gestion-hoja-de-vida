@@ -18,7 +18,7 @@
         id_distincion_academica BIGINT NOT NULL,
         numero_resolucion VARCHAR(100) NOT NULL,
         fecha_resolucion DATE NOT NULL,
-        resolucion_pdf LONGBLOB NOT NULL,
+        resolucion_pdf MEDIUMBLOB NOT NULL,
         PRIMARY KEY (id),
         CONSTRAINT uk_estudiante_distincion_academica
             UNIQUE (id_estudiante, id_distincion_academica),
