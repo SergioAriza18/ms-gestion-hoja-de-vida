@@ -28,12 +28,12 @@ class HistoriaAcademicaMapperTest {
     }
 
     @Test
-    @DisplayName("Debe mapear nota nula como nula en asignaturas normales")
-    void toAsignaturaDtoMapeaNotaNulaComoNulaEnAsignaturaNormal() {
+    @DisplayName("Debe mapear nota nula como NR en asignaturas normales")
+    void toAsignaturaDtoMapeaNotaNulaComoNrEnAsignaturaNormal() {
         AsignaturaCursadaDTO resultado = HistoriaAcademicaMapper.toAsignaturaDto(
                 asignatura("M10002", "Bases de datos", null));
 
-        assertThat(resultado.getNotaDefinitiva()).isNull();
+        assertThat(resultado.getNotaDefinitiva()).isEqualTo("NR");
     }
 
     @Test

@@ -41,6 +41,4 @@ public class Pasantia {
     @Column(name = "informepasantia")
     private String informePasantia;
 
-    @Column(name = "estado")
-    private Boolean estado;
 }

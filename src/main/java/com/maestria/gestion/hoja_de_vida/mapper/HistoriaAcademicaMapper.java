@@ -63,7 +63,7 @@ public class HistoriaAcademicaMapper {
                         }
                 }
 
-                return nota == null ? null : formatearNota(nota);
+                return nota == null ? NOTA_NR : formatearNota(nota);
         }
 
         private static String formatearNota(BigDecimal nota) {

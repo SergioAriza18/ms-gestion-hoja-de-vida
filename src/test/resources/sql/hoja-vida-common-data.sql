@@ -20,10 +20,10 @@ INSERT INTO personas (id, nombre, apellido, identificacion, tipo_identificacion)
     (10, 'Diana', 'Torres', 111111111, 'CC'),
     (11, 'Andrés', 'Ruiz', 222222222, 'CC');
 
-INSERT INTO estudiantes (id, codigo, correo_universidad, titulo_pregrado, fecha_grado, semestre_academico, periodo_ingreso, id_persona) VALUES
-    (1, '2024001', 'laura.gomez@universidad.edu', 'Ingeniera de Sistemas', DATE '2023-12-15', 2, '2024-1', 1),
-    (2, '2023002', 'carlos.perez@universidad.edu', 'Ingeniero Electrónico', DATE '2022-12-15', 4, '2023-2', 2),
-    (3, '2022003', 'ana.lopez@universidad.edu', 'Ingeniera Industrial', DATE '2021-12-15', 1, '2022-1', 3);
+INSERT INTO estudiantes (id, codigo, correo_universidad, semestre_academico, periodo_ingreso, id_persona) VALUES
+    (1, '2024001', 'laura.gomez@universidad.edu', 2, '2024-1', 1),
+    (2, '2023002', 'carlos.perez@universidad.edu', 4, '2023-2', 2),
+    (3, '2022003', 'ana.lopez@universidad.edu', 1, '2022-1', 3);
 
 INSERT INTO distinciones_academicas (id, codigo, nombre) VALUES
     (1, 'EXCELENCIA_ACADEMICA', 'Excelencia académica'),
