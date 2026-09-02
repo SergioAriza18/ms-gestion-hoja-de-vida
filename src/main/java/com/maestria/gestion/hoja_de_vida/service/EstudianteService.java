@@ -23,6 +23,17 @@ public interface EstudianteService {
             LocalDate fechaResolucion,
             MultipartFile resolucion);
 
+    void editarDistincion(
+            String codigoEstudiante,
+            TipoDistincionAcademica tipo,
+            String numeroResolucion,
+            LocalDate fechaResolucion,
+            MultipartFile resolucion);
+
+    void eliminarDistincion(
+            String codigoEstudiante,
+            TipoDistincionAcademica tipo);
+
     byte[] obtenerResolucionDistincion(
             String codigoEstudiante,
             TipoDistincionAcademica tipo);

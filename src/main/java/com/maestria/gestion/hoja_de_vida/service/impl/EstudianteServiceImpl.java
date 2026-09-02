@@ -113,6 +113,10 @@ public class EstudianteServiceImpl implements EstudianteService {
             String numeroResolucion,
             LocalDate fechaResolucion,
             MultipartFile resolucion) {
+        validarTipoDistincion(tipo);
+        String numeroResolucionNormalizado = validarNumeroResolucion(numeroResolucion);
+        validarFechaResolucion(fechaResolucion);
+
         Estudiante estudiante = estudianteRepository.findByCodigo(codigoEstudiante)
                 .orElseThrow(() -> new ResourceNotFoundException("No se encontró el estudiante solicitado."));
         DistincionAcademica distincion = distincionAcademicaRepository.findByCodigo(tipo.name())
@@ -130,7 +134,7 @@ public class EstudianteServiceImpl implements EstudianteService {
             estudianteDistincionAcademicaRepository.saveAndFlush(EstudianteDistincionAcademica.builder()
                     .estudiante(estudiante)
                     .distincion(distincion)
-                    .numeroResolucion(numeroResolucion.trim())
+                    .numeroResolucion(numeroResolucionNormalizado)
                     .fechaResolucion(fechaResolucion)
                     .resolucionPdf(archivoResolucion)
                     .build());
@@ -141,14 +145,88 @@ public class EstudianteServiceImpl implements EstudianteService {
     }
 
     @Override
+    @Transactional
+    public void editarDistincion(
+            String codigoEstudiante,
+            TipoDistincionAcademica tipo,
+            String numeroResolucion,
+            LocalDate fechaResolucion,
+            MultipartFile resolucion) {
+        validarTipoDistincion(tipo);
+        String numeroResolucionNormalizado = validarNumeroResolucion(numeroResolucion);
+        validarFechaResolucion(fechaResolucion);
+
+        EstudianteDistincionAcademica estudianteDistincion = obtenerDistincionEstudiante(
+                codigoEstudiante,
+                tipo,
+                "No se encontró la distinción académica solicitada para el estudiante.");
+        estudianteDistincion.setNumeroResolucion(numeroResolucionNormalizado);
+        estudianteDistincion.setFechaResolucion(fechaResolucion);
+
+        if (resolucion != null) {
+            estudianteDistincion.setResolucionPdf(validarYLeerPdf(resolucion));
+        }
+
+        estudianteDistincionAcademicaRepository.saveAndFlush(estudianteDistincion);
+    }
+
+    @Override
+    @Transactional
+    public void eliminarDistincion(
+            String codigoEstudiante,
+            TipoDistincionAcademica tipo) {
+        validarTipoDistincion(tipo);
+        estudianteDistincionAcademicaRepository.delete(obtenerDistincionEstudiante(
+                codigoEstudiante,
+                tipo,
+                "No se encontró la distinción académica solicitada para el estudiante."));
+    }
+
+    @Override
     public byte[] obtenerResolucionDistincion(
             String codigoEstudiante,
             TipoDistincionAcademica tipo) {
+        validarTipoDistincion(tipo);
+        return obtenerDistincionEstudiante(
+                codigoEstudiante,
+                tipo,
+                "No se encontró la resolución de la distinción solicitada.").getResolucionPdf();
+    }
+
+    private EstudianteDistincionAcademica obtenerDistincionEstudiante(
+            String codigoEstudiante,
+            TipoDistincionAcademica tipo,
+            String mensajeNoEncontrado) {
         return estudianteDistincionAcademicaRepository
                 .findByEstudianteCodigoAndDistincionCodigo(codigoEstudiante, tipo.name())
-                .map(EstudianteDistincionAcademica::getResolucionPdf)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "No se encontró la resolución de la distinción solicitada."));
+                .orElseThrow(() -> new ResourceNotFoundException(mensajeNoEncontrado));
+    }
+
+    private void validarTipoDistincion(TipoDistincionAcademica tipo) {
+        if (tipo == null) {
+            throw new IllegalArgumentException("El tipo de distinción es obligatorio.");
+        }
+    }
+
+    private String validarNumeroResolucion(String numeroResolucion) {
+        if (numeroResolucion == null || numeroResolucion.isBlank()) {
+            throw new IllegalArgumentException("El número de resolución es obligatorio.");
+        }
+
+        String numeroNormalizado = numeroResolucion.trim();
+        if (numeroNormalizado.length() > 100) {
+            throw new IllegalArgumentException("El número de resolución no puede superar los 100 caracteres.");
+        }
+        return numeroNormalizado;
+    }
+
+    private void validarFechaResolucion(LocalDate fechaResolucion) {
+        if (fechaResolucion == null) {
+            throw new IllegalArgumentException("La fecha de resolución es obligatoria.");
+        }
+        if (fechaResolucion.isAfter(LocalDate.now())) {
+            throw new IllegalArgumentException("La fecha de resolución no puede ser futura.");
+        }
     }
 
     private void validarElegibilidadExcelencia(Long idEstudiante, TipoDistincionAcademica tipo) {

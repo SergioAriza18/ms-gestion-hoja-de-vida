@@ -17,9 +17,11 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -115,5 +117,44 @@ public class EstudianteController {
                 .contentLength(resolucion.length)
                 .contentType(MediaType.APPLICATION_PDF)
                 .body(resolucion);
+    }
+
+    @PutMapping(value = "/{codigoEstudiante}/distinciones/{tipo}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('COORDINADOR')")
+    public ResponseEntity<Void> editarDistincion(
+            @PathVariable
+            @Size(max = 30, message = "El código no puede superar los 30 caracteres.")
+            @Pattern(regexp = "^[A-Za-z0-9-]+$", message = "El código tiene un formato inválido.")
+            String codigoEstudiante,
+            @PathVariable TipoDistincionAcademica tipo,
+            @RequestParam
+            @NotBlank(message = "El número de resolución es obligatorio.")
+            @Size(max = 100, message = "El número de resolución no puede superar los 100 caracteres.")
+            String numeroResolucion,
+            @RequestParam
+            @NotNull(message = "La fecha de resolución es obligatoria.")
+            @PastOrPresent(message = "La fecha de resolución no puede ser futura.")
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate fechaResolucion,
+            @RequestParam(required = false) MultipartFile resolucion) {
+        estudianteService.editarDistincion(
+                codigoEstudiante,
+                tipo,
+                numeroResolucion,
+                fechaResolucion,
+                resolucion);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/{codigoEstudiante}/distinciones/{tipo}")
+    @PreAuthorize("hasRole('COORDINADOR')")
+    public ResponseEntity<Void> eliminarDistincion(
+            @PathVariable
+            @Size(max = 30, message = "El código no puede superar los 30 caracteres.")
+            @Pattern(regexp = "^[A-Za-z0-9-]+$", message = "El código tiene un formato inválido.")
+            String codigoEstudiante,
+            @PathVariable TipoDistincionAcademica tipo) {
+        estudianteService.eliminarDistincion(codigoEstudiante, tipo);
+        return ResponseEntity.noContent().build();
     }
 }
