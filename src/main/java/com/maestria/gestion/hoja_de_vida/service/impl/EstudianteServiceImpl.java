@@ -18,6 +18,7 @@ import com.maestria.gestion.hoja_de_vida.domain.Estudiante;
 import com.maestria.gestion.hoja_de_vida.domain.EstudianteDistincionAcademica;
 import com.maestria.gestion.hoja_de_vida.domain.TipoDistincionAcademica;
 import com.maestria.gestion.hoja_de_vida.config.ArchivoResolucionProperties;
+import com.maestria.gestion.hoja_de_vida.dto.response.DistincionAcademicaDetalleDTO;
 import com.maestria.gestion.hoja_de_vida.dto.response.EstudianteBusquedaDTO;
 import com.maestria.gestion.hoja_de_vida.exception.ResourceNotFoundException;
 import com.maestria.gestion.hoja_de_vida.mapper.EstudianteBusquedaMapper;
@@ -180,6 +181,23 @@ public class EstudianteServiceImpl implements EstudianteService {
                 codigoEstudiante,
                 tipo,
                 "No se encontró la distinción académica solicitada para el estudiante."));
+    }
+
+    @Override
+    public DistincionAcademicaDetalleDTO obtenerDetalleDistincion(
+            String codigoEstudiante,
+            TipoDistincionAcademica tipo) {
+        validarTipoDistincion(tipo);
+        EstudianteDistincionAcademica estudianteDistincion = obtenerDistincionEstudiante(
+                codigoEstudiante,
+                tipo,
+                "No se encontró la distinción académica solicitada para el estudiante.");
+
+        return DistincionAcademicaDetalleDTO.builder()
+                .tipo(tipo)
+                .numeroResolucion(estudianteDistincion.getNumeroResolucion())
+                .fechaResolucion(estudianteDistincion.getFechaResolucion())
+                .build();
     }
 
     @Override

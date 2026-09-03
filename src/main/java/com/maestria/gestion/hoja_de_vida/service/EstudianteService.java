@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.maestria.gestion.hoja_de_vida.domain.TipoDistincionAcademica;
+import com.maestria.gestion.hoja_de_vida.dto.response.DistincionAcademicaDetalleDTO;
 import com.maestria.gestion.hoja_de_vida.dto.response.EstudianteBusquedaDTO;
 
 public interface EstudianteService {
@@ -31,6 +32,10 @@ public interface EstudianteService {
             MultipartFile resolucion);
 
     void eliminarDistincion(
+            String codigoEstudiante,
+            TipoDistincionAcademica tipo);
+
+    DistincionAcademicaDetalleDTO obtenerDetalleDistincion(
             String codigoEstudiante,
             TipoDistincionAcademica tipo);
 

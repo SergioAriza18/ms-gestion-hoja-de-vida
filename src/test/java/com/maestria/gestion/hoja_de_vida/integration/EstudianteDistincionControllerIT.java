@@ -3,6 +3,7 @@ package com.maestria.gestion.hoja_de_vida.integration;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasSize;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -255,6 +256,155 @@ class EstudianteDistincionControllerIT {
                 .content("{}"))
                 .andExpect(status().isUnsupportedMediaType())
                 .andExpect(jsonPath("$.codigo").value("UNSUPPORTED_MEDIA_TYPE"));
+    }
+
+    @Test
+    @Sql(scripts = "/sql/hoja-vida-distinction-data.sql")
+    @DisplayName("Debe consultar los datos guardados de una distinción")
+    void obtenerDetalleDistincionRegistradaRetornaDatos() throws Exception {
+        mockMvc.perform(get(
+                "/api/hoja-vida/estudiantes/{codigo}/distinciones/{tipo}",
+                "2024001",
+                "EXCELENCIA_ACADEMICA"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.tipo").value("EXCELENCIA_ACADEMICA"))
+                .andExpect(jsonPath("$.numeroResolucion").value("RES-EXC-001"))
+                .andExpect(jsonPath("$.fechaResolucion").value("2025-01-15"));
+    }
+
+    @Test
+    @DisplayName("Debe retornar 404 al consultar los datos de una distinción no registrada")
+    void obtenerDetalleDistincionNoRegistradaRetornaNotFound() throws Exception {
+        mockMvc.perform(get(
+                "/api/hoja-vida/estudiantes/{codigo}/distinciones/{tipo}",
+                "2023002",
+                "EXCELENCIA_ACADEMICA"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.codigo").value("RESOURCE_NOT_FOUND"))
+                .andExpect(jsonPath("$.mensaje", containsString("distinción académica")));
+    }
+
+    @Test
+    @Sql(scripts = "/sql/hoja-vida-distinction-data.sql")
+    @DisplayName("Debe editar los datos de una distinción conservando el PDF registrado")
+    void editarDistincionSinNuevoPdfActualizaDatosYConservaResolucion() throws Exception {
+        mockMvc.perform(multipart(
+                "/api/hoja-vida/estudiantes/{codigo}/distinciones/{tipo}",
+                "2024001",
+                "MENCION_HONOR_TRABAJO_GRADO")
+                .param("numeroResolucion", "  RES-MEN-EDITADA  ")
+                .param("fechaResolucion", "2025-04-20")
+                .with(request -> {
+                    request.setMethod("PUT");
+                    return request;
+                }))
+                .andExpect(status().isNoContent());
+
+        assertThat(estudianteDistincionAcademicaRepository
+                .findByEstudianteCodigoAndDistincionCodigo("2024001", "MENCION_HONOR_TRABAJO_GRADO"))
+                .get()
+                .satisfies(registro -> {
+                    assertThat(registro.getNumeroResolucion()).isEqualTo("RES-MEN-EDITADA");
+                    assertThat(registro.getFechaResolucion()).isEqualTo(LocalDate.of(2025, 4, 20));
+                    assertThat(registro.getResolucionPdf()).containsExactly(PDF_MENCION_REGISTRADA);
+                });
+    }
+
+    @Test
+    @Sql(scripts = "/sql/hoja-vida-distinction-data.sql")
+    @DisplayName("Debe editar una distinción reemplazando la resolución PDF")
+    void editarDistincionConNuevoPdfReemplazaResolucion() throws Exception {
+        mockMvc.perform(multipart(
+                "/api/hoja-vida/estudiantes/{codigo}/distinciones/{tipo}",
+                "2024001",
+                "EXCELENCIA_ACADEMICA")
+                .file(resolucionPdf())
+                .param("numeroResolucion", "RES-EXC-EDITADA")
+                .param("fechaResolucion", "2025-04-21")
+                .with(request -> {
+                    request.setMethod("PUT");
+                    return request;
+                }))
+                .andExpect(status().isNoContent());
+
+        assertThat(estudianteDistincionAcademicaRepository
+                .findByEstudianteCodigoAndDistincionCodigo("2024001", "EXCELENCIA_ACADEMICA"))
+                .get()
+                .satisfies(registro -> {
+                    assertThat(registro.getNumeroResolucion()).isEqualTo("RES-EXC-EDITADA");
+                    assertThat(registro.getFechaResolucion()).isEqualTo(LocalDate.of(2025, 4, 21));
+                    assertThat(registro.getResolucionPdf()).containsExactly(PDF_PRUEBA);
+                });
+    }
+
+    @Test
+    @Sql(scripts = "/sql/hoja-vida-distinction-data.sql")
+    @DisplayName("Debe rechazar la edición cuando la fecha de resolución es futura")
+    void editarDistincionConFechaFuturaRetornaBadRequest() throws Exception {
+        mockMvc.perform(multipart(
+                "/api/hoja-vida/estudiantes/{codigo}/distinciones/{tipo}",
+                "2024001",
+                "EXCELENCIA_ACADEMICA")
+                .param("numeroResolucion", "RES-EXC-EDITADA")
+                .param("fechaResolucion", LocalDate.now().plusDays(1).toString())
+                .with(request -> {
+                    request.setMethod("PUT");
+                    return request;
+                }))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.codigo").value("BAD_REQUEST"))
+                .andExpect(jsonPath("$.mensaje", containsString("no puede ser futura")));
+
+        assertThat(estudianteDistincionAcademicaRepository
+                .findByEstudianteCodigoAndDistincionCodigo("2024001", "EXCELENCIA_ACADEMICA"))
+                .get()
+                .extracting(registro -> registro.getNumeroResolucion())
+                .isEqualTo("RES-EXC-001");
+    }
+
+    @Test
+    @DisplayName("Debe retornar 404 al editar una distinción no registrada")
+    void editarDistincionNoRegistradaRetornaNotFound() throws Exception {
+        mockMvc.perform(multipart(
+                "/api/hoja-vida/estudiantes/{codigo}/distinciones/{tipo}",
+                "2023002",
+                "MENCION_HONOR_TRABAJO_GRADO")
+                .param("numeroResolucion", "RES-MEN-EDITADA")
+                .param("fechaResolucion", "2025-04-20")
+                .with(request -> {
+                    request.setMethod("PUT");
+                    return request;
+                }))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.codigo").value("RESOURCE_NOT_FOUND"))
+                .andExpect(jsonPath("$.mensaje", containsString("distinción académica")));
+    }
+
+    @Test
+    @Sql(scripts = "/sql/hoja-vida-distinction-data.sql")
+    @DisplayName("Debe eliminar una distinción asignada al estudiante")
+    void eliminarDistincionRegistradaEliminaAsociacion() throws Exception {
+        mockMvc.perform(delete(
+                "/api/hoja-vida/estudiantes/{codigo}/distinciones/{tipo}",
+                "2024001",
+                "EXCELENCIA_ACADEMICA"))
+                .andExpect(status().isNoContent());
+
+        assertThat(estudianteDistincionAcademicaRepository
+                .findByEstudianteCodigoAndDistincionCodigo("2024001", "EXCELENCIA_ACADEMICA"))
+                .isEmpty();
+    }
+
+    @Test
+    @DisplayName("Debe retornar 404 al eliminar una distinción no registrada")
+    void eliminarDistincionNoRegistradaRetornaNotFound() throws Exception {
+        mockMvc.perform(delete(
+                "/api/hoja-vida/estudiantes/{codigo}/distinciones/{tipo}",
+                "2023002",
+                "EXCELENCIA_ACADEMICA"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.codigo").value("RESOURCE_NOT_FOUND"))
+                .andExpect(jsonPath("$.mensaje", containsString("distinción académica")));
     }
 
     @Test

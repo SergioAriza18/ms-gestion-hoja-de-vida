@@ -1,6 +1,8 @@
 package com.maestria.gestion.hoja_de_vida.integration;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -115,6 +117,94 @@ class SeguridadControllerIT {
                 "/api/hoja-vida/estudiantes/{codigo}/historia-academica",
                 "2023002")
                 .header(HttpHeaders.AUTHORIZATION, bearer(token(List.of("ROLE_ESTUDIANTE"), "2024001"))))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.codigo").value("FORBIDDEN"));
+    }
+
+    @Test
+    @Sql(scripts = "/sql/hoja-vida-distinction-data.sql")
+    @DisplayName("Debe permitir al coordinador consultar los datos de una distinción")
+    void consultarDetalleDistincionComoCoordinadorRetornaOk() throws Exception {
+        mockMvc.perform(get(
+                "/api/hoja-vida/estudiantes/{codigo}/distinciones/{tipo}",
+                "2024001",
+                "EXCELENCIA_ACADEMICA")
+                .header(HttpHeaders.AUTHORIZATION, bearer(token(List.of("ROLE_COORDINADOR"), null))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.numeroResolucion").value("RES-EXC-001"));
+    }
+
+    @Test
+    @DisplayName("Debe impedir al estudiante consultar los datos de una distinción")
+    void consultarDetalleDistincionComoEstudianteRetornaForbidden() throws Exception {
+        mockMvc.perform(get(
+                "/api/hoja-vida/estudiantes/{codigo}/distinciones/{tipo}",
+                "2024001",
+                "EXCELENCIA_ACADEMICA")
+                .header(HttpHeaders.AUTHORIZATION,
+                        bearer(token(List.of("ROLE_ESTUDIANTE"), "2024001"))))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.codigo").value("FORBIDDEN"));
+    }
+
+    @Test
+    @Sql(scripts = "/sql/hoja-vida-distinction-data.sql")
+    @DisplayName("Debe permitir al coordinador editar una distinción")
+    void editarDistincionComoCoordinadorRetornaNoContent() throws Exception {
+        mockMvc.perform(multipart(
+                "/api/hoja-vida/estudiantes/{codigo}/distinciones/{tipo}",
+                "2024001",
+                "EXCELENCIA_ACADEMICA")
+                .param("numeroResolucion", "RES-EXC-JWT")
+                .param("fechaResolucion", "2025-04-20")
+                .header(HttpHeaders.AUTHORIZATION, bearer(token(List.of("ROLE_COORDINADOR"), null)))
+                .with(request -> {
+                    request.setMethod("PUT");
+                    return request;
+                }))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    @DisplayName("Debe impedir al estudiante editar una distinción")
+    void editarDistincionComoEstudianteRetornaForbidden() throws Exception {
+        mockMvc.perform(multipart(
+                "/api/hoja-vida/estudiantes/{codigo}/distinciones/{tipo}",
+                "2024001",
+                "EXCELENCIA_ACADEMICA")
+                .param("numeroResolucion", "RES-EXC-JWT")
+                .param("fechaResolucion", "2025-04-20")
+                .header(HttpHeaders.AUTHORIZATION,
+                        bearer(token(List.of("ROLE_ESTUDIANTE"), "2024001")))
+                .with(request -> {
+                    request.setMethod("PUT");
+                    return request;
+                }))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.codigo").value("FORBIDDEN"));
+    }
+
+    @Test
+    @Sql(scripts = "/sql/hoja-vida-distinction-data.sql")
+    @DisplayName("Debe permitir al coordinador eliminar una distinción")
+    void eliminarDistincionComoCoordinadorRetornaNoContent() throws Exception {
+        mockMvc.perform(delete(
+                "/api/hoja-vida/estudiantes/{codigo}/distinciones/{tipo}",
+                "2024001",
+                "EXCELENCIA_ACADEMICA")
+                .header(HttpHeaders.AUTHORIZATION, bearer(token(List.of("ROLE_COORDINADOR"), null))))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    @DisplayName("Debe impedir al estudiante eliminar una distinción")
+    void eliminarDistincionComoEstudianteRetornaForbidden() throws Exception {
+        mockMvc.perform(delete(
+                "/api/hoja-vida/estudiantes/{codigo}/distinciones/{tipo}",
+                "2024001",
+                "EXCELENCIA_ACADEMICA")
+                .header(HttpHeaders.AUTHORIZATION,
+                        bearer(token(List.of("ROLE_ESTUDIANTE"), "2024001"))))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.codigo").value("FORBIDDEN"));
     }

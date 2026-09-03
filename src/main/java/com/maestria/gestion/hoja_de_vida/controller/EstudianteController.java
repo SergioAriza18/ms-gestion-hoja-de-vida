@@ -28,6 +28,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.maestria.gestion.hoja_de_vida.domain.TipoDistincionAcademica;
+import com.maestria.gestion.hoja_de_vida.dto.response.DistincionAcademicaDetalleDTO;
 import com.maestria.gestion.hoja_de_vida.dto.response.EstudianteBusquedaDTO;
 import com.maestria.gestion.hoja_de_vida.service.EstudianteService;
 
@@ -117,6 +118,17 @@ public class EstudianteController {
                 .contentLength(resolucion.length)
                 .contentType(MediaType.APPLICATION_PDF)
                 .body(resolucion);
+    }
+
+    @GetMapping("/{codigoEstudiante}/distinciones/{tipo}")
+    @PreAuthorize("hasRole('COORDINADOR')")
+    public ResponseEntity<DistincionAcademicaDetalleDTO> obtenerDetalleDistincion(
+            @PathVariable
+            @Size(max = 30, message = "El código no puede superar los 30 caracteres.")
+            @Pattern(regexp = "^[A-Za-z0-9-]+$", message = "El código tiene un formato inválido.")
+            String codigoEstudiante,
+            @PathVariable TipoDistincionAcademica tipo) {
+        return ResponseEntity.ok(estudianteService.obtenerDetalleDistincion(codigoEstudiante, tipo));
     }
 
     @PutMapping(value = "/{codigoEstudiante}/distinciones/{tipo}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
