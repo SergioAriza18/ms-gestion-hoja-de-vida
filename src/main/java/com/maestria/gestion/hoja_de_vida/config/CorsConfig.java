@@ -3,6 +3,7 @@ package com.maestria.gestion.hoja_de_vida.config;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpHeaders;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -19,8 +20,9 @@ public class CorsConfig {
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/api/hoja-vida/**")
                         .allowedOrigins(allowedOrigins)
-                        .allowedMethods("GET", "OPTIONS")
+                        .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*")
+                        .exposedHeaders(HttpHeaders.CONTENT_DISPOSITION)
                         .allowCredentials(true);
             }
         };

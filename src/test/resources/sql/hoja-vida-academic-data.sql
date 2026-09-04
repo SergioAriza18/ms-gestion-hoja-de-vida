@@ -27,9 +27,9 @@ INSERT INTO estudiantes_publicacion (id_estudiante, idpublicacion) VALUES
     (1, 1),
     (1, 2);
 
-INSERT INTO pasantias (id, id_estudiante, creditospas, numactapas, fechaactapas, informepasantia, estado) VALUES
-    (1, 1, 2, 'ACT-PAS-1', '2024-05-20', 'Informe de pasantía', TRUE),
-    (2, 1, -1, 'ACT-PAS-2', '2024-05-21', 'Créditos no válidos', TRUE);
+INSERT INTO pasantias (id, id_estudiante, creditospas, numactapas, fechaactapas, informepasantia) VALUES
+    (1, 1, 2, 'ACT-PAS-1', '2024-05-20', 'Informe de pasantía'),
+    (2, 1, -1, 'ACT-PAS-2', '2024-05-21', 'Créditos no válidos');
 
 INSERT INTO practicas (id, id_estudiante, creditosprac, numactaprac, horastotales) VALUES
     (1, 1, 1, 'ACT-PRA-1', 64),

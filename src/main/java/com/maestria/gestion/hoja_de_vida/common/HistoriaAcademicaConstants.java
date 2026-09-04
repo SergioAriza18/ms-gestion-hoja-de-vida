@@ -19,6 +19,7 @@ public final class HistoriaAcademicaConstants {
     public static final BigDecimal NOTA_MINIMA = BigDecimal.ZERO;
     public static final BigDecimal NOTA_APROBATORIA = BigDecimal.valueOf(3.5);
     public static final BigDecimal NOTA_MAXIMA = BigDecimal.valueOf(5);
+    public static final BigDecimal PROMEDIO_MINIMO_EXCELENCIA = BigDecimal.valueOf(4.8);
     public static final String NOTA_NA = "NA";
     public static final String NOTA_A = "A";
     public static final String NOTA_NR = "NR";

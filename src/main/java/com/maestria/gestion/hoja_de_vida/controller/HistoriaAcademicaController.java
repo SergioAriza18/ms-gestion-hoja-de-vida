@@ -4,6 +4,7 @@ import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -24,6 +25,7 @@ public class HistoriaAcademicaController {
     private final HistoriaAcademicaService historiaAcademicaService;
 
     @GetMapping("/{codigoEstudiante}/historia-academica")
+    @PreAuthorize("@hojaVidaAuthorization.puedeConsultar(authentication, #codigoEstudiante)")
     public ResponseEntity<HistoriaAcademicaResponseDTO> getHistoriaAcademica(
             @PathVariable
             @Size(max = 30, message = "El parámetro no puede superar los 30 caracteres.")

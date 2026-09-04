@@ -14,31 +14,21 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "pasantias")
+@Table(name = "distinciones_academicas")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Pasantia {
+public class DistincionAcademica {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "id_estudiante", nullable = false)
-    private Long idEstudiante;
+    @Column(name = "codigo", nullable = false, unique = true, length = 50)
+    private String codigo;
 
-    @Column(name = "creditospas", nullable = false)
-    private Integer creditosAsignados;
-
-    @Column(name = "numactapas", nullable = false)
-    private String acta;
-
-    @Column(name = "fechaactapas")
-    private String fechaActa;
-
-    @Column(name = "informepasantia")
-    private String informePasantia;
-
+    @Column(name = "nombre", nullable = false, length = 150)
+    private String nombre;
 }

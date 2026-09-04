@@ -35,3 +35,6 @@ CREATE TABLE IF NOT EXISTS estudiantes_publicacion (
     id_estudiante BIGINT NOT NULL,
     idpublicacion BIGINT NOT NULL
 );
+
+CREATE UNIQUE INDEX IF NOT EXISTS uk_estudiante_distincion_academica
+    ON estudiantes_distinciones_academicas (id_estudiante, id_distincion_academica);

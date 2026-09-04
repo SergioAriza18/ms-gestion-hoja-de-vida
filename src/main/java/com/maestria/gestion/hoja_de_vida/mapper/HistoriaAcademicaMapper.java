@@ -2,7 +2,6 @@ package com.maestria.gestion.hoja_de_vida.mapper;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Locale;
 
 import com.maestria.gestion.hoja_de_vida.domain.Estudiante;
 import com.maestria.gestion.hoja_de_vida.domain.Pasantia;
@@ -21,13 +20,13 @@ import com.maestria.gestion.hoja_de_vida.dto.response.PracticaDTO;
 import com.maestria.gestion.hoja_de_vida.dto.response.PublicacionDTO;
 import com.maestria.gestion.hoja_de_vida.repository.AsignaturaCursadaRepository.AsignaturaCursadaResumen;
 
-import static com.maestria.gestion.hoja_de_vida.common.HistoriaAcademicaConstants.CODIGOS_MATERIAS_ESPECIALES;
 import static com.maestria.gestion.hoja_de_vida.common.HistoriaAcademicaConstants.NOTA_A;
 import static com.maestria.gestion.hoja_de_vida.common.HistoriaAcademicaConstants.NOTA_APROBATORIA;
 import static com.maestria.gestion.hoja_de_vida.common.HistoriaAcademicaConstants.NOTA_MAXIMA;
 import static com.maestria.gestion.hoja_de_vida.common.HistoriaAcademicaConstants.NOTA_MINIMA;
 import static com.maestria.gestion.hoja_de_vida.common.HistoriaAcademicaConstants.NOTA_NA;
 import static com.maestria.gestion.hoja_de_vida.common.HistoriaAcademicaConstants.NOTA_NR;
+import static com.maestria.gestion.hoja_de_vida.common.HistoriaAcademicaRules.esMateriaEspecial;
 
 public class HistoriaAcademicaMapper {
 
@@ -52,7 +51,7 @@ public class HistoriaAcademicaMapper {
         }
 
         private static String mapearNotaDefinitiva(String codigoMateria, String nombreMateria, BigDecimal nota) {
-                if (esMateriaConReglaEspecial(codigoMateria, nombreMateria)) {
+                if (esMateriaEspecial(codigoMateria, nombreMateria)) {
                         if (nota == null) {
                                 return NOTA_NR;
                         }
@@ -64,25 +63,12 @@ public class HistoriaAcademicaMapper {
                         }
                 }
 
-                return nota == null ? null : formatearNota(nota);
+                return nota == null ? NOTA_NR : formatearNota(nota);
         }
 
         private static String formatearNota(BigDecimal nota) {
                 String valorNormalizado = nota.stripTrailingZeros().toPlainString();
                 return valorNormalizado.contains(".") ? valorNormalizado : valorNormalizado + ".0";
-        }
-
-        private static boolean esMateriaConReglaEspecial(String codigoMateria, String nombreMateria) {
-                return coincideCodigoEspecial(codigoMateria) || coincideCodigoEspecial(nombreMateria);
-        }
-
-        private static boolean coincideCodigoEspecial(String valor) {
-                if (valor == null || valor.isBlank()) {
-                        return false;
-                }
-
-                String normalizado = valor.trim().toUpperCase(Locale.ROOT);
-                return CODIGOS_MATERIAS_ESPECIALES.contains(normalizado);
         }
 
         public static PasantiaDTO toPasantiaDto(Pasantia pasantia) {
@@ -128,7 +114,8 @@ public class HistoriaAcademicaMapper {
                         String tituloTesis,
                         String directorTesis,
                         String codirectorTesis,
-                        List<AsignaturaCursadaDTO> requisitosGrado) {
+                        List<AsignaturaCursadaDTO> requisitosGrado,
+                        List<String> distincionesAcademicas) {
 
                 String nombreCompleto = (estudiante.getPersona().getNombre() + " "
                                 + estudiante.getPersona().getApellido()).trim();
@@ -160,6 +147,7 @@ public class HistoriaAcademicaMapper {
                                 .directorTesis(directorTesis)
                                 .codirectorTesis(codirectorTesis)
                                 .asignaturas(requisitosGrado)
+                                .distincionesAcademicas(distincionesAcademicas)
                                 .build();
 
                 EstudianteHistoriaAcademicaDTO estudianteDto = EstudianteHistoriaAcademicaDTO.builder()
@@ -169,7 +157,7 @@ public class HistoriaAcademicaMapper {
                                 .correoUniversidad(estudiante.getCorreoUniversidad())
                                 .periodoIngreso(estudiante.getPeriodoIngreso())
                                 .semestreAcademico(estudiante.getSemestreAcademico())
-                                .promedioCarrera(promedioCarrera == null ? BigDecimal.ZERO : promedioCarrera)
+                                .promedioCarrera(promedioCarrera)
                                 .build();
 
                 HistoriaAcademicaDTO historiaAcademica = HistoriaAcademicaDTO.builder()

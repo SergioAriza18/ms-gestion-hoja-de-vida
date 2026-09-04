@@ -18,4 +18,5 @@ public class InformacionAdicionalDTO {
     private String directorTesis;
     private String codirectorTesis;
     private List<AsignaturaCursadaDTO> asignaturas;
+    private List<String> distincionesAcademicas;
 }

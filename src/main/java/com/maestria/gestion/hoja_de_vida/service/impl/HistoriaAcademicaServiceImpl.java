@@ -22,6 +22,7 @@ import com.maestria.gestion.hoja_de_vida.mapper.HistoriaAcademicaMapper;
 import com.maestria.gestion.hoja_de_vida.repository.AsignaturaCursadaRepository;
 import com.maestria.gestion.hoja_de_vida.repository.AsignaturaCursadaRepository.AsignaturaCursadaResumen;
 import com.maestria.gestion.hoja_de_vida.repository.EstudianteRepository;
+import com.maestria.gestion.hoja_de_vida.repository.EstudianteDistincionAcademicaRepository;
 import com.maestria.gestion.hoja_de_vida.repository.PasantiaRepository;
 import com.maestria.gestion.hoja_de_vida.repository.PracticaRepository;
 import com.maestria.gestion.hoja_de_vida.repository.PublicacionRepository;
@@ -37,6 +38,7 @@ import static com.maestria.gestion.hoja_de_vida.common.HistoriaAcademicaConstant
 import static com.maestria.gestion.hoja_de_vida.common.HistoriaAcademicaConstants.AREA_REQUISITOS_GRADO;
 import static com.maestria.gestion.hoja_de_vida.common.HistoriaAcademicaConstants.NOTA_APROBATORIA;
 import static com.maestria.gestion.hoja_de_vida.common.HistoriaAcademicaConstants.VALOR_TEXTO_VACIO;
+import static com.maestria.gestion.hoja_de_vida.common.HistoriaAcademicaRules.esMateriaEspecial;
 
 @Service
 @RequiredArgsConstructor
@@ -54,6 +56,7 @@ public class HistoriaAcademicaServiceImpl implements HistoriaAcademicaService {
         private final PasantiaRepository pasantiaInvestigacionRepository;
         private final PublicacionRepository publicacionInvestigacionRepository;
         private final PracticaRepository practicaRepository;
+        private final EstudianteDistincionAcademicaRepository estudianteDistincionAcademicaRepository;
 
         @Override
         public HistoriaAcademicaResponseDTO obtenerHistoriaAcademica(String codigoEstudiante) {
@@ -110,7 +113,8 @@ public class HistoriaAcademicaServiceImpl implements HistoriaAcademicaService {
                 String codirectorTesis = directorCodirector
                                 .map(EstudianteRepository.DirectorCodirectorResumen::getCodirector)
                                 .orElse(VALOR_TEXTO_VACIO);
-
+                List<String> distincionesAcademicas = estudianteDistincionAcademicaRepository
+                                .findCodigosByEstudianteId(estudiante.getId());
                 return HistoriaAcademicaMapper.toHistoriaAcademicaResponse(
                                 estudiante,
                                 fundamentacion,
@@ -125,7 +129,14 @@ public class HistoriaAcademicaServiceImpl implements HistoriaAcademicaService {
                                 tituloTesis,
                                 directorTesis,
                                 codirectorTesis,
-                                requisitosGrado);
+                                requisitosGrado,
+                                distincionesAcademicas);
+        }
+
+        @Override
+        public BigDecimal consultarPromedioCarrera(Long idEstudiante) {
+                return calcularPromedioCarrera(
+                                asignaturaCursadaRepository.findAsignaturasResumenByEstudianteId(idEstudiante));
         }
 
         private List<AsignaturaCursadaDTO> filtrarAsignaturasPorArea(List<AsignaturaCursadaResumen> asignaturas,
@@ -185,7 +196,9 @@ public class HistoriaAcademicaServiceImpl implements HistoriaAcademicaService {
                 for (AsignaturaCursadaResumen asignatura : asignaturas) {
                         BigDecimal nota = asignatura.getNota();
 
-                        if (nota == null) {
+                        if (nota == null || esMateriaEspecial(
+                                        asignatura.getCodigoAsignatura(),
+                                        asignatura.getNombreAsignatura())) {
                                 continue;
                         }
 

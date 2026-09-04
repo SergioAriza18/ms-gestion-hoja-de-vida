@@ -5,6 +5,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Method;
+import java.util.List;
 import java.util.Set;
 
 import javax.validation.ConstraintViolation;
@@ -16,14 +17,20 @@ import org.junit.jupiter.api.Test;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.FieldError;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.MultipartException;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
 import com.maestria.gestion.hoja_de_vida.exception.ApiError;
@@ -148,6 +155,68 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
+    @DisplayName("Debe retornar ApiError con estado 400 cuando falta el archivo multipart")
+    void handleMissingServletRequestPartExceptionRetornaApiErrorConEstado400() {
+        MockHttpServletRequest request = new MockHttpServletRequest(
+                "POST", "/api/hoja-vida/estudiantes/2024001/distinciones");
+        MissingServletRequestPartException exception = new MissingServletRequestPartException("resolucion");
+
+        ResponseEntity<ApiError> response = handler.handleMissingServletRequestPartException(exception, request);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getCodigo()).isEqualTo(ErrorCodes.BAD_REQUEST);
+        assertThat(response.getBody().getMensaje()).contains("resolucion", "obligatorio");
+    }
+
+    @Test
+    @DisplayName("Debe retornar ApiError con estado 413 cuando el archivo supera el tamaño permitido")
+    void handleMaxUploadSizeExceededExceptionRetornaApiErrorConEstado413() {
+        MockHttpServletRequest request = new MockHttpServletRequest(
+                "POST", "/api/hoja-vida/estudiantes/2024001/distinciones");
+        MaxUploadSizeExceededException exception = new MaxUploadSizeExceededException(5L * 1024 * 1024);
+
+        ResponseEntity<ApiError> response = handler.handleMaxUploadSizeExceededException(exception, request);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.PAYLOAD_TOO_LARGE);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getCodigo()).isEqualTo(ErrorCodes.PAYLOAD_TOO_LARGE);
+        assertThat(response.getBody().getMensaje()).contains("tamaño máximo permitido");
+    }
+
+    @Test
+    @DisplayName("Debe retornar ApiError con estado 400 cuando el multipart es inválido")
+    void handleMultipartExceptionRetornaApiErrorConEstado400() {
+        MockHttpServletRequest request = new MockHttpServletRequest(
+                "POST", "/api/hoja-vida/estudiantes/2024001/distinciones");
+        MultipartException exception = new MultipartException("Contenido multipart inválido.");
+
+        ResponseEntity<ApiError> response = handler.handleMultipartException(exception, request);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getCodigo()).isEqualTo(ErrorCodes.BAD_REQUEST);
+        assertThat(response.getBody().getMensaje()).contains("archivo adjunto");
+    }
+
+    @Test
+    @DisplayName("Debe retornar ApiError con estado 415 para un tipo de contenido no soportado")
+    void handleHttpMediaTypeNotSupportedExceptionRetornaApiErrorConEstado415() {
+        MockHttpServletRequest request = new MockHttpServletRequest(
+                "POST", "/api/hoja-vida/estudiantes/2024001/distinciones");
+        HttpMediaTypeNotSupportedException exception = new HttpMediaTypeNotSupportedException(
+                MediaType.APPLICATION_JSON,
+                List.of(MediaType.MULTIPART_FORM_DATA));
+
+        ResponseEntity<ApiError> response = handler.handleHttpMediaTypeNotSupportedException(exception, request);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNSUPPORTED_MEDIA_TYPE);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getCodigo()).isEqualTo(ErrorCodes.UNSUPPORTED_MEDIA_TYPE);
+        assertThat(response.getBody().getMensaje()).contains("tipo de contenido");
+    }
+
+    @Test
     @DisplayName("Debe retornar ApiError con estado 500 cuando ocurre una excepción no controlada")
     void handleGenericExceptionRetornaApiErrorConEstado500() {
         MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/hoja-vida/estudiantes");
@@ -159,6 +228,22 @@ class GlobalExceptionHandlerTest {
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().getCodigo()).isEqualTo(ErrorCodes.INTERNAL_SERVER_ERROR);
         assertThat(response.getBody().getMensaje()).contains("error inesperado");
+    }
+
+    @Test
+    @DisplayName("Debe retornar ApiError con estado 403 cuando el usuario no tiene permisos")
+    void handleAccessDeniedExceptionRetornaApiErrorConEstado403() {
+        MockHttpServletRequest request = new MockHttpServletRequest(
+                "GET", "/api/hoja-vida/estudiantes");
+
+        ResponseEntity<ApiError> response = handler.handleAccessDeniedException(
+                new AccessDeniedException("Acceso denegado."),
+                request);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getCodigo()).isEqualTo(ErrorCodes.FORBIDDEN);
+        assertThat(response.getBody().getMensaje()).contains("permisos");
     }
 
     @Test

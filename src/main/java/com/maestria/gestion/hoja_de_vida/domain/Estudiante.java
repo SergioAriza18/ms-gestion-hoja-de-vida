@@ -16,8 +16,6 @@ import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
-import java.time.LocalDate;
-
 @Entity
 @Table(name = "estudiantes")
 @Getter
@@ -36,12 +34,6 @@ public class Estudiante {
 
     @Column(name = "correo_universidad")
     private String correoUniversidad;
-
-    @Column(name = "titulo_pregrado")
-    private String tituloPregrado;
-
-    @Column(name = "fecha_grado")
-    private LocalDate fechaGrado;
 
     @Column(name = "semestre_academico")
     private Integer semestreAcademico;
