@@ -2,6 +2,7 @@ package com.maestria.gestion.hoja_de_vida.service.impl;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.text.Normalizer;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -20,6 +21,7 @@ import com.maestria.gestion.hoja_de_vida.domain.TipoDistincionAcademica;
 import com.maestria.gestion.hoja_de_vida.config.ArchivoResolucionProperties;
 import com.maestria.gestion.hoja_de_vida.dto.response.DistincionAcademicaDetalleDTO;
 import com.maestria.gestion.hoja_de_vida.dto.response.EstudianteBusquedaDTO;
+import com.maestria.gestion.hoja_de_vida.dto.response.ResolucionDistincionDTO;
 import com.maestria.gestion.hoja_de_vida.exception.ResourceNotFoundException;
 import com.maestria.gestion.hoja_de_vida.mapper.EstudianteBusquedaMapper;
 import com.maestria.gestion.hoja_de_vida.repository.DistincionAcademicaRepository;
@@ -201,14 +203,27 @@ public class EstudianteServiceImpl implements EstudianteService {
     }
 
     @Override
-    public byte[] obtenerResolucionDistincion(
+    public ResolucionDistincionDTO obtenerResolucionDistincion(
             String codigoEstudiante,
             TipoDistincionAcademica tipo) {
         validarTipoDistincion(tipo);
-        return obtenerDistincionEstudiante(
+        EstudianteDistincionAcademica estudianteDistincion = obtenerDistincionEstudiante(
                 codigoEstudiante,
                 tipo,
-                "No se encontró la resolución de la distinción solicitada.").getResolucionPdf();
+                "No se encontró la resolución de la distinción solicitada.");
+
+        return new ResolucionDistincionDTO(
+                crearNombreArchivoResolucion(estudianteDistincion.getNumeroResolucion()),
+                estudianteDistincion.getResolucionPdf());
+    }
+
+    private String crearNombreArchivoResolucion(String numeroResolucion) {
+        String nombreNormalizado = Normalizer.normalize(numeroResolucion, Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "")
+                .replaceAll("[^A-Za-z0-9._-]+", "-")
+                .replaceAll("^[.-]+|[.-]+$", "");
+
+        return (nombreNormalizado.isBlank() ? "resolucion" : nombreNormalizado) + ".pdf";
     }
 
     private EstudianteDistincionAcademica obtenerDistincionEstudiante(

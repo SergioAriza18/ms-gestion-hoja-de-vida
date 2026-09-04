@@ -8,6 +8,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.maestria.gestion.hoja_de_vida.domain.TipoDistincionAcademica;
 import com.maestria.gestion.hoja_de_vida.dto.response.DistincionAcademicaDetalleDTO;
 import com.maestria.gestion.hoja_de_vida.dto.response.EstudianteBusquedaDTO;
+import com.maestria.gestion.hoja_de_vida.dto.response.ResolucionDistincionDTO;
 
 public interface EstudianteService {
 
@@ -39,7 +40,7 @@ public interface EstudianteService {
             String codigoEstudiante,
             TipoDistincionAcademica tipo);
 
-    byte[] obtenerResolucionDistincion(
+    ResolucionDistincionDTO obtenerResolucionDistincion(
             String codigoEstudiante,
             TipoDistincionAcademica tipo);
 }

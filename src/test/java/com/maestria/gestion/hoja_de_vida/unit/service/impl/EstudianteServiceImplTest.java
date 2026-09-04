@@ -180,14 +180,16 @@ class EstudianteServiceImplTest {
         when(estudianteDistincionAcademicaRepository
                 .findByEstudianteCodigoAndDistincionCodigo("2024001", "EXCELENCIA_ACADEMICA"))
                 .thenReturn(Optional.of(EstudianteDistincionAcademica.builder()
+                        .numeroResolucion("RES-EXC-001")
                         .resolucionPdf(pdf)
                         .build()));
 
-        byte[] resultado = estudianteService.obtenerResolucionDistincion(
+        var resultado = estudianteService.obtenerResolucionDistincion(
                 "2024001",
                 TipoDistincionAcademica.EXCELENCIA_ACADEMICA);
 
-        assertThat(resultado).isSameAs(pdf);
+        assertThat(resultado.getNombreArchivo()).isEqualTo("RES-EXC-001.pdf");
+        assertThat(resultado.getContenido()).isSameAs(pdf);
     }
 
     @Test

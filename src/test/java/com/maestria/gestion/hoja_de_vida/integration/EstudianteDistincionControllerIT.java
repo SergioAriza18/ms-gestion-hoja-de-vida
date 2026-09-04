@@ -420,7 +420,7 @@ class EstudianteDistincionControllerIT {
                 .andExpect(content().bytes(PDF_MENCION_REGISTRADA))
                 .andExpect(header().string(
                         HttpHeaders.CONTENT_DISPOSITION,
-                        "inline; filename=\"resolucion-mencion_honor_trabajo_grado.pdf\""))
+                        "inline; filename=\"RES-MEN-001.pdf\""))
                 .andExpect(header().string(
                         HttpHeaders.CONTENT_LENGTH,
                         String.valueOf(PDF_MENCION_REGISTRADA.length)))

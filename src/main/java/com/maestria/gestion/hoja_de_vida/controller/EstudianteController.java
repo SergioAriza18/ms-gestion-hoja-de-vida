@@ -30,6 +30,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.maestria.gestion.hoja_de_vida.domain.TipoDistincionAcademica;
 import com.maestria.gestion.hoja_de_vida.dto.response.DistincionAcademicaDetalleDTO;
 import com.maestria.gestion.hoja_de_vida.dto.response.EstudianteBusquedaDTO;
+import com.maestria.gestion.hoja_de_vida.dto.response.ResolucionDistincionDTO;
 import com.maestria.gestion.hoja_de_vida.service.EstudianteService;
 
 import lombok.RequiredArgsConstructor;
@@ -106,18 +107,20 @@ public class EstudianteController {
             @Pattern(regexp = "^[A-Za-z0-9-]+$", message = "El código tiene un formato inválido.")
             String codigoEstudiante,
             @PathVariable TipoDistincionAcademica tipo) {
-        byte[] resolucion = estudianteService.obtenerResolucionDistincion(codigoEstudiante, tipo);
+        ResolucionDistincionDTO resolucion = estudianteService.obtenerResolucionDistincion(
+                codigoEstudiante,
+                tipo);
 
         return ResponseEntity.ok()
                 .header(
                         HttpHeaders.CONTENT_DISPOSITION,
-                        "inline; filename=\"resolucion-" + tipo.name().toLowerCase() + ".pdf\"")
+                        "inline; filename=\"" + resolucion.getNombreArchivo() + "\"")
                 .header(HttpHeaders.CACHE_CONTROL, "no-store, no-cache, must-revalidate, private, max-age=0")
                 .header(HttpHeaders.PRAGMA, "no-cache")
                 .header("X-Content-Type-Options", "nosniff")
-                .contentLength(resolucion.length)
+                .contentLength(resolucion.getContenido().length)
                 .contentType(MediaType.APPLICATION_PDF)
-                .body(resolucion);
+                .body(resolucion.getContenido());
     }
 
     @GetMapping("/{codigoEstudiante}/distinciones/{tipo}")
