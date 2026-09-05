@@ -6,6 +6,8 @@ import java.math.BigDecimal;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import com.maestria.gestion.hoja_de_vida.dto.response.AsignaturaCursadaDTO;
 import com.maestria.gestion.hoja_de_vida.mapper.HistoriaAcademicaMapper;
@@ -14,17 +16,24 @@ import com.maestria.gestion.hoja_de_vida.repository.AsignaturaCursadaRepository.
 @DisplayName("Pruebas unitarias de HistoriaAcademicaMapper")
 class HistoriaAcademicaMapperTest {
 
-    @Test
-    @DisplayName("Debe mapear una asignatura normal con nota decimal")
-    void toAsignaturaDtoMapeaAsignaturaNormalConNotaDecimal() {
+    @ParameterizedTest(name = "nota {0} se muestra como {1}")
+    @CsvSource({
+            "4.44, 4.4",
+            "4.55, 4.5",
+            "4.56, 4.6",
+            "4.65, 4.6",
+            "4.66, 4.7"
+    })
+    @DisplayName("Debe aproximar la nota normal a un decimal desde seis centésimas")
+    void toAsignaturaDtoAproximaNotaNormalDesdeSeisCentesimas(String nota, String notaEsperada) {
         AsignaturaCursadaDTO resultado = HistoriaAcademicaMapper.toAsignaturaDto(
-                asignatura("M10001", "Arquitectura de software", BigDecimal.valueOf(4.25)));
+                asignatura("M10001", "Arquitectura de software", new BigDecimal(nota)));
 
         assertThat(resultado.getPeriodoCursado()).isEqualTo("2024-1");
         assertThat(resultado.getCodigoMateria()).isEqualTo("M10001");
         assertThat(resultado.getNombreMateria()).isEqualTo("Arquitectura de software");
         assertThat(resultado.getCreditos()).isEqualTo(4);
-        assertThat(resultado.getNotaDefinitiva()).isEqualTo("4.25");
+        assertThat(resultado.getNotaDefinitiva()).isEqualTo(notaEsperada);
     }
 
     @Test
@@ -82,8 +91,8 @@ class HistoriaAcademicaMapperTest {
     }
 
     @Test
-    @DisplayName("Debe eliminar ceros decimales innecesarios")
-    void toAsignaturaDtoEliminaCerosDecimalesInnecesarios() {
+    @DisplayName("Debe conservar una sola cifra decimal")
+    void toAsignaturaDtoConservaUnaSolaCifraDecimal() {
         AsignaturaCursadaDTO resultado = HistoriaAcademicaMapper.toAsignaturaDto(
                 asignatura("M10004", "Inteligencia artificial", new BigDecimal("4.20")));
 

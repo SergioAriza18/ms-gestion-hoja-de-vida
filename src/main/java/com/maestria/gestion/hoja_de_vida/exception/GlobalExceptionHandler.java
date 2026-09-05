@@ -10,6 +10,8 @@ import javax.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.validation.BindException;
+import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
@@ -32,7 +34,18 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiError> handleMethodArgumentNotValidException(MethodArgumentNotValidException ex,
             HttpServletRequest request) {
-        String detalleValidacion = ex.getBindingResult()
+        return buildValidationError(ex.getBindingResult(), request);
+    }
+
+    @ExceptionHandler(BindException.class)
+    public ResponseEntity<ApiError> handleBindException(BindException ex, HttpServletRequest request) {
+        return buildValidationError(ex.getBindingResult(), request);
+    }
+
+    private ResponseEntity<ApiError> buildValidationError(
+            BindingResult bindingResult,
+            HttpServletRequest request) {
+        String detalleValidacion = bindingResult
                 .getFieldErrors()
                 .stream()
                 .map(this::formatFieldError)

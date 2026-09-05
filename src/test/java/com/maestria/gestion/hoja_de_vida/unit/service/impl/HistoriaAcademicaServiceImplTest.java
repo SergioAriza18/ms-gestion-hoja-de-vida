@@ -11,6 +11,8 @@ import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -139,27 +141,31 @@ class HistoriaAcademicaServiceImplTest {
         assertThat(resultado.getHistoriaAcademica().getInformacionAdicional().getCodirectorTesis()).isEmpty();
     }
 
-    @Test
-    @DisplayName("Debe redondear el promedio a un decimal")
-    void consultarPromedioCarreraRedondeaAUnDecimal() {
+    @ParameterizedTest(name = "promedio {0} se muestra como {1}")
+    @CsvSource({
+            "3.47, 3.5",
+            "4.44, 4.4",
+            "4.55, 4.5",
+            "4.56, 4.6",
+            "4.65, 4.6",
+            "4.66, 4.7",
+            "4.75, 4.7",
+            "4.76, 4.8"
+    })
+    @DisplayName("Debe aproximar el promedio a un decimal desde seis centésimas")
+    void consultarPromedioCarreraAproximaAUnDecimalDesdeSeisCentesimas(
+            String nota,
+            String promedioEsperado) {
         when(asignaturaCursadaRepository.findAsignaturasResumenByEstudianteId(1L))
                 .thenReturn(List.of(asignatura(
                         5L,
                         "M10001",
                         "Fundamentos de computación",
                         4,
-                        new BigDecimal("3.47"))))
-                .thenReturn(List.of(asignatura(
-                        6L,
-                        "M10002",
-                        "Electiva avanzada",
-                        3,
-                        new BigDecimal("4.56"))));
+                        new BigDecimal(nota))));
 
         assertThat(historiaAcademicaService.consultarPromedioCarrera(1L))
-                .isEqualByComparingTo(new BigDecimal("3.5"));
-        assertThat(historiaAcademicaService.consultarPromedioCarrera(1L))
-                .isEqualByComparingTo(new BigDecimal("4.6"));
+                .isEqualByComparingTo(new BigDecimal(promedioEsperado));
     }
 
     private Estudiante estudiante() {

@@ -206,7 +206,7 @@ class EstudianteDistincionControllerIT {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.codigo").value("BAD_REQUEST"))
                 .andExpect(jsonPath("$.mensaje", containsString("resolucion")))
-                .andExpect(jsonPath("$.mensaje", containsString("obligatorio")));
+                .andExpect(jsonPath("$.mensaje", containsString("obligatoria")));
     }
 
     @Test

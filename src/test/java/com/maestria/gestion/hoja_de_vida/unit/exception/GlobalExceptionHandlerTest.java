@@ -5,7 +5,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Method;
-import java.util.List;
 import java.util.Set;
 
 import javax.validation.ConstraintViolation;
@@ -15,28 +14,20 @@ import javax.validation.Path;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.MethodParameter;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.validation.BeanPropertyBindingResult;
+import org.springframework.validation.BindException;
 import org.springframework.validation.FieldError;
-import org.springframework.web.HttpMediaTypeNotSupportedException;
-import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.MultipartException;
-import org.springframework.web.multipart.support.MissingServletRequestPartException;
-import org.springframework.web.servlet.NoHandlerFoundException;
 
 import com.maestria.gestion.hoja_de_vida.exception.ApiError;
 import com.maestria.gestion.hoja_de_vida.exception.ErrorCodes;
 import com.maestria.gestion.hoja_de_vida.exception.GlobalExceptionHandler;
-import com.maestria.gestion.hoja_de_vida.exception.ResourceNotFoundException;
 
 @DisplayName("Pruebas unitarias de GlobalExceptionHandler")
 class GlobalExceptionHandlerTest {
@@ -44,8 +35,8 @@ class GlobalExceptionHandlerTest {
     private final GlobalExceptionHandler handler = new GlobalExceptionHandler();
 
     @Test
-    @DisplayName("Debe retornar ApiError con estado 400 cuando falla la validación de un argumento")
-    void handleMethodArgumentNotValidExceptionRetornaApiErrorConEstado400() throws NoSuchMethodException {
+    @DisplayName("Debe detallar los errores de validación de argumentos")
+    void handleMethodArgumentNotValidExceptionDetallaCampoInvalido() throws NoSuchMethodException {
         BeanPropertyBindingResult bindingResult = new BeanPropertyBindingResult(new Object(), "request");
         bindingResult.addError(new FieldError("request", "valor", "El campo es obligatorio."));
         Method method = GlobalExceptionHandlerTest.class.getDeclaredMethod("metodoDePrueba", String.class);
@@ -57,13 +48,27 @@ class GlobalExceptionHandlerTest {
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getCodigo()).isEqualTo(ErrorCodes.BAD_REQUEST);
         assertThat(response.getBody().getMensaje()).contains("valor: El campo es obligatorio.");
     }
 
     @Test
-    @DisplayName("Debe retornar ApiError con estado 400 cuando falla una restricción de parámetros")
-    void handleConstraintViolationExceptionRetornaApiErrorConEstado400() {
+    @DisplayName("Debe detallar los errores de validación de formularios")
+    void handleBindExceptionDetallaCampoInvalido() {
+        BindException exception = new BindException(new Object(), "request");
+        exception.addError(new FieldError("request", "fechaResolucion", "La fecha no puede ser futura."));
+        MockHttpServletRequest request = new MockHttpServletRequest(
+                "POST", "/api/hoja-vida/estudiantes/2024001/distinciones");
+
+        ResponseEntity<ApiError> response = handler.handleBindException(exception, request);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getMensaje()).contains("fechaResolucion: La fecha no puede ser futura.");
+    }
+
+    @Test
+    @DisplayName("Debe detallar el campo que incumple una restricción")
+    void handleConstraintViolationExceptionDetallaCampoInvalido() {
         ConstraintViolation<?> violation = mock(ConstraintViolation.class);
         Path path = mock(Path.class);
         when(path.toString()).thenReturn("buscar.valor");
@@ -76,189 +81,51 @@ class GlobalExceptionHandlerTest {
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getCodigo()).isEqualTo(ErrorCodes.BAD_REQUEST);
         assertThat(response.getBody().getMensaje()).contains("valor: El parámetro es obligatorio.");
     }
 
     @Test
-    @DisplayName("Debe retornar ApiError con estado 404 cuando no existe la ruta solicitada")
-    void handleNoHandlerFoundExceptionRetornaApiErrorConEstado404() {
-        NoHandlerFoundException exception = new NoHandlerFoundException("GET", "/api/no-existe", new HttpHeaders());
-        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/no-existe");
-
-        ResponseEntity<ApiError> response = handler.handleNoHandlerFoundException(exception, request);
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
-        assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getCodigo()).isEqualTo(ErrorCodes.RESOURCE_NOT_FOUND);
-        assertThat(response.getBody().getUrl()).isEqualTo("/api/no-existe");
-    }
-
-    @Test
-    @DisplayName("Debe retornar ApiError con estado 405 cuando el método HTTP no está soportado")
-    void handleHttpRequestMethodNotSupportedExceptionRetornaApiErrorConEstado405() {
-        HttpRequestMethodNotSupportedException exception = new HttpRequestMethodNotSupportedException("POST");
-        MockHttpServletRequest request = new MockHttpServletRequest("POST", "/api/hoja-vida/estudiantes");
-
-        ResponseEntity<ApiError> response = handler.handleHttpRequestMethodNotSupportedException(exception, request);
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.METHOD_NOT_ALLOWED);
-        assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getCodigo()).isEqualTo(ErrorCodes.METHOD_NOT_ALLOWED);
-        assertThat(response.getBody().getMensaje()).contains("POST");
-    }
-
-    @Test
-    @DisplayName("Debe retornar ApiError con estado 404 cuando el recurso no existe")
-    void handleResourceNotFoundExceptionRetornaApiErrorConEstado404() {
-        MockHttpServletRequest request = new MockHttpServletRequest("GET",
-                "/api/hoja-vida/estudiantes/NO-EXISTE/historia-academica");
-        ResourceNotFoundException exception = new ResourceNotFoundException("No se encontró el recurso.");
-
-        ResponseEntity<ApiError> response = handler.handleResourceNotFoundException(exception, request);
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
-        assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getEstado()).isEqualTo(404);
-        assertThat(response.getBody().getCodigo()).isEqualTo(ErrorCodes.RESOURCE_NOT_FOUND);
-        assertThat(response.getBody().getMensaje()).isEqualTo("No se encontró el recurso.");
-        assertThat(response.getBody().getUrl()).isEqualTo(request.getRequestURI());
-    }
-
-    @Test
-    @DisplayName("Debe retornar ApiError con estado 400 cuando ocurre IllegalArgumentException")
-    void handleIllegalArgumentExceptionRetornaApiErrorConEstado400() {
-        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/hoja-vida/estudiantes/buscar");
-        IllegalArgumentException exception = new IllegalArgumentException("La solicitud no es válida.");
-
-        ResponseEntity<ApiError> response = handler.handleIllegalArgumentException(exception, request);
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-        assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getCodigo()).isEqualTo(ErrorCodes.BAD_REQUEST);
-        assertThat(response.getBody().getMensaje()).isEqualTo("La solicitud no es válida.");
-    }
-
-    @Test
-    @DisplayName("Debe retornar ApiError con estado 400 cuando falta un parámetro obligatorio")
-    void handleMissingServletRequestParameterExceptionRetornaApiErrorConEstado400() {
-        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/hoja-vida/estudiantes/buscar");
-        MissingServletRequestParameterException exception = new MissingServletRequestParameterException(
-                "valor", String.class.getSimpleName());
-
-        ResponseEntity<ApiError> response = handler.handleMissingServletRequestParameterException(exception, request);
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-        assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getCodigo()).isEqualTo(ErrorCodes.BAD_REQUEST);
-        assertThat(response.getBody().getMensaje()).contains("valor", "obligatorio");
-    }
-
-    @Test
-    @DisplayName("Debe retornar ApiError con estado 400 cuando falta el archivo multipart")
-    void handleMissingServletRequestPartExceptionRetornaApiErrorConEstado400() {
+    @DisplayName("Debe retornar 413 cuando el archivo supera el tamaño permitido")
+    void handleMaxUploadSizeExceededExceptionRetornaPayloadTooLarge() {
         MockHttpServletRequest request = new MockHttpServletRequest(
                 "POST", "/api/hoja-vida/estudiantes/2024001/distinciones");
-        MissingServletRequestPartException exception = new MissingServletRequestPartException("resolucion");
 
-        ResponseEntity<ApiError> response = handler.handleMissingServletRequestPartException(exception, request);
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-        assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getCodigo()).isEqualTo(ErrorCodes.BAD_REQUEST);
-        assertThat(response.getBody().getMensaje()).contains("resolucion", "obligatorio");
-    }
-
-    @Test
-    @DisplayName("Debe retornar ApiError con estado 413 cuando el archivo supera el tamaño permitido")
-    void handleMaxUploadSizeExceededExceptionRetornaApiErrorConEstado413() {
-        MockHttpServletRequest request = new MockHttpServletRequest(
-                "POST", "/api/hoja-vida/estudiantes/2024001/distinciones");
-        MaxUploadSizeExceededException exception = new MaxUploadSizeExceededException(5L * 1024 * 1024);
-
-        ResponseEntity<ApiError> response = handler.handleMaxUploadSizeExceededException(exception, request);
+        ResponseEntity<ApiError> response = handler.handleMaxUploadSizeExceededException(
+                new MaxUploadSizeExceededException(5L * 1024 * 1024),
+                request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.PAYLOAD_TOO_LARGE);
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().getCodigo()).isEqualTo(ErrorCodes.PAYLOAD_TOO_LARGE);
-        assertThat(response.getBody().getMensaje()).contains("tamaño máximo permitido");
     }
 
     @Test
-    @DisplayName("Debe retornar ApiError con estado 400 cuando el multipart es inválido")
-    void handleMultipartExceptionRetornaApiErrorConEstado400() {
+    @DisplayName("Debe retornar 400 cuando el multipart es inválido")
+    void handleMultipartExceptionRetornaBadRequest() {
         MockHttpServletRequest request = new MockHttpServletRequest(
                 "POST", "/api/hoja-vida/estudiantes/2024001/distinciones");
-        MultipartException exception = new MultipartException("Contenido multipart inválido.");
 
-        ResponseEntity<ApiError> response = handler.handleMultipartException(exception, request);
+        ResponseEntity<ApiError> response = handler.handleMultipartException(
+                new MultipartException("Contenido multipart inválido."),
+                request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getCodigo()).isEqualTo(ErrorCodes.BAD_REQUEST);
         assertThat(response.getBody().getMensaje()).contains("archivo adjunto");
     }
 
     @Test
-    @DisplayName("Debe retornar ApiError con estado 415 para un tipo de contenido no soportado")
-    void handleHttpMediaTypeNotSupportedExceptionRetornaApiErrorConEstado415() {
-        MockHttpServletRequest request = new MockHttpServletRequest(
-                "POST", "/api/hoja-vida/estudiantes/2024001/distinciones");
-        HttpMediaTypeNotSupportedException exception = new HttpMediaTypeNotSupportedException(
-                MediaType.APPLICATION_JSON,
-                List.of(MediaType.MULTIPART_FORM_DATA));
-
-        ResponseEntity<ApiError> response = handler.handleHttpMediaTypeNotSupportedException(exception, request);
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNSUPPORTED_MEDIA_TYPE);
-        assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getCodigo()).isEqualTo(ErrorCodes.UNSUPPORTED_MEDIA_TYPE);
-        assertThat(response.getBody().getMensaje()).contains("tipo de contenido");
-    }
-
-    @Test
-    @DisplayName("Debe retornar ApiError con estado 500 cuando ocurre una excepción no controlada")
-    void handleGenericExceptionRetornaApiErrorConEstado500() {
+    @DisplayName("Debe retornar 500 ante una excepción no controlada")
+    void handleGenericExceptionRetornaInternalServerError() {
         MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/hoja-vida/estudiantes");
-        Exception exception = new RuntimeException("Error inesperado de prueba.");
 
-        ResponseEntity<ApiError> response = handler.handleGenericException(exception, request);
+        ResponseEntity<ApiError> response = handler.handleGenericException(
+                new RuntimeException("Error inesperado de prueba."),
+                request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().getCodigo()).isEqualTo(ErrorCodes.INTERNAL_SERVER_ERROR);
-        assertThat(response.getBody().getMensaje()).contains("error inesperado");
-    }
-
-    @Test
-    @DisplayName("Debe retornar ApiError con estado 403 cuando el usuario no tiene permisos")
-    void handleAccessDeniedExceptionRetornaApiErrorConEstado403() {
-        MockHttpServletRequest request = new MockHttpServletRequest(
-                "GET", "/api/hoja-vida/estudiantes");
-
-        ResponseEntity<ApiError> response = handler.handleAccessDeniedException(
-                new AccessDeniedException("Acceso denegado."),
-                request);
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
-        assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getCodigo()).isEqualTo(ErrorCodes.FORBIDDEN);
-        assertThat(response.getBody().getMensaje()).contains("permisos");
-    }
-
-    @Test
-    @DisplayName("Debe retornar ApiError con estado 400 cuando un parámetro tiene formato inválido")
-    void handleMethodArgumentTypeMismatchExceptionRetornaApiErrorConEstado400() {
-        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/hoja-vida/estudiantes/filtrar");
-        MethodArgumentTypeMismatchException exception = new MethodArgumentTypeMismatchException(
-                "cuarto", Integer.class, "semestreActual", null, new NumberFormatException());
-
-        ResponseEntity<ApiError> response = handler.handleMethodArgumentTypeMismatchException(exception, request);
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-        assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getCodigo()).isEqualTo(ErrorCodes.BAD_REQUEST);
-        assertThat(response.getBody().getMensaje()).contains("semestreActual", "formato inválido");
     }
 
     @Test

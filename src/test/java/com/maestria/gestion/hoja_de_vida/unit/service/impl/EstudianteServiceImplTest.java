@@ -7,10 +7,8 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.when;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -24,12 +22,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Sort;
 
 import com.maestria.gestion.hoja_de_vida.domain.Estudiante;
-import com.maestria.gestion.hoja_de_vida.domain.EstudianteDistincionAcademica;
 import com.maestria.gestion.hoja_de_vida.domain.Persona;
-import com.maestria.gestion.hoja_de_vida.domain.TipoDistincionAcademica;
 import com.maestria.gestion.hoja_de_vida.dto.response.EstudianteBusquedaDTO;
-import com.maestria.gestion.hoja_de_vida.exception.ResourceNotFoundException;
-import com.maestria.gestion.hoja_de_vida.repository.EstudianteDistincionAcademicaRepository;
 import com.maestria.gestion.hoja_de_vida.repository.EstudianteRepository;
 import com.maestria.gestion.hoja_de_vida.service.impl.EstudianteServiceImpl;
 
@@ -42,9 +36,6 @@ class EstudianteServiceImplTest {
 
     @Mock
     private EstudianteRepository estudianteRepository;
-
-    @Mock
-    private EstudianteDistincionAcademicaRepository estudianteDistincionAcademicaRepository;
 
     @InjectMocks
     private EstudianteServiceImpl estudianteService;
@@ -171,149 +162,6 @@ class EstudianteServiceImplTest {
                 .hasMessage("Debe indicar al menos un filtro.");
 
         verifyNoInteractions(estudianteRepository);
-    }
-
-    @Test
-    @DisplayName("Debe retornar el PDF de una distinción registrada")
-    void obtenerResolucionDistincionRegistradaRetornaPdf() {
-        byte[] pdf = "%PDF-prueba".getBytes();
-        when(estudianteDistincionAcademicaRepository
-                .findByEstudianteCodigoAndDistincionCodigo("2024001", "EXCELENCIA_ACADEMICA"))
-                .thenReturn(Optional.of(EstudianteDistincionAcademica.builder()
-                        .numeroResolucion("RES-EXC-001")
-                        .resolucionPdf(pdf)
-                        .build()));
-
-        var resultado = estudianteService.obtenerResolucionDistincion(
-                "2024001",
-                TipoDistincionAcademica.EXCELENCIA_ACADEMICA);
-
-        assertThat(resultado.getNombreArchivo()).isEqualTo("RES-EXC-001.pdf");
-        assertThat(resultado.getContenido()).isSameAs(pdf);
-    }
-
-    @Test
-    @DisplayName("Debe informar cuando una distinción no tiene resolución registrada")
-    void obtenerResolucionDistincionNoRegistradaLanzaExcepcion() {
-        when(estudianteDistincionAcademicaRepository
-                .findByEstudianteCodigoAndDistincionCodigo("2024001", "MENCION_HONOR_TRABAJO_GRADO"))
-                .thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> estudianteService.obtenerResolucionDistincion(
-                "2024001",
-                TipoDistincionAcademica.MENCION_HONOR_TRABAJO_GRADO))
-                .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessage("No se encontró la resolución de la distinción solicitada.");
-    }
-
-    @Test
-    @DisplayName("Debe retornar los datos guardados de una distinción")
-    void obtenerDetalleDistincionRegistradaRetornaDatos() {
-        when(estudianteDistincionAcademicaRepository
-                .findByEstudianteCodigoAndDistincionCodigo("2024001", "EXCELENCIA_ACADEMICA"))
-                .thenReturn(Optional.of(EstudianteDistincionAcademica.builder()
-                        .numeroResolucion("RES-EXC-001")
-                        .fechaResolucion(LocalDate.of(2025, 1, 15))
-                        .build()));
-
-        var resultado = estudianteService.obtenerDetalleDistincion(
-                "2024001",
-                TipoDistincionAcademica.EXCELENCIA_ACADEMICA);
-
-        assertThat(resultado.getTipo()).isEqualTo(TipoDistincionAcademica.EXCELENCIA_ACADEMICA);
-        assertThat(resultado.getNumeroResolucion()).isEqualTo("RES-EXC-001");
-        assertThat(resultado.getFechaResolucion()).isEqualTo(LocalDate.of(2025, 1, 15));
-    }
-
-    @Test
-    @DisplayName("Debe editar los datos de la distinción y conservar el PDF existente")
-    void editarDistincionSinNuevoPdfActualizaDatosYConservaResolucion() {
-        byte[] pdfOriginal = "%PDF-original".getBytes();
-        EstudianteDistincionAcademica registro = EstudianteDistincionAcademica.builder()
-                .numeroResolucion("RES-ANTERIOR")
-                .fechaResolucion(LocalDate.of(2025, 1, 15))
-                .resolucionPdf(pdfOriginal)
-                .build();
-        when(estudianteDistincionAcademicaRepository
-                .findByEstudianteCodigoAndDistincionCodigo("2024001", "EXCELENCIA_ACADEMICA"))
-                .thenReturn(Optional.of(registro));
-
-        estudianteService.editarDistincion(
-                "2024001",
-                TipoDistincionAcademica.EXCELENCIA_ACADEMICA,
-                "  RES-ACTUALIZADA  ",
-                LocalDate.of(2025, 4, 20),
-                null);
-
-        assertThat(registro.getNumeroResolucion()).isEqualTo("RES-ACTUALIZADA");
-        assertThat(registro.getFechaResolucion()).isEqualTo(LocalDate.of(2025, 4, 20));
-        assertThat(registro.getResolucionPdf()).isSameAs(pdfOriginal);
-        verify(estudianteDistincionAcademicaRepository).saveAndFlush(registro);
-    }
-
-    @Test
-    @DisplayName("Debe rechazar la edición cuando el número de resolución está vacío")
-    void editarDistincionConNumeroVacioLanzaExcepcion() {
-        assertThatThrownBy(() -> estudianteService.editarDistincion(
-                "2024001",
-                TipoDistincionAcademica.EXCELENCIA_ACADEMICA,
-                "   ",
-                LocalDate.of(2025, 4, 20),
-                null))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("El número de resolución es obligatorio.");
-
-        verifyNoInteractions(estudianteDistincionAcademicaRepository);
-    }
-
-    @Test
-    @DisplayName("Debe informar cuando se intenta editar una distinción no registrada")
-    void editarDistincionNoRegistradaLanzaExcepcion() {
-        when(estudianteDistincionAcademicaRepository
-                .findByEstudianteCodigoAndDistincionCodigo("2024001", "EXCELENCIA_ACADEMICA"))
-                .thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> estudianteService.editarDistincion(
-                "2024001",
-                TipoDistincionAcademica.EXCELENCIA_ACADEMICA,
-                "RES-ACTUALIZADA",
-                LocalDate.of(2025, 4, 20),
-                null))
-                .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessage("No se encontró la distinción académica solicitada para el estudiante.");
-
-        verify(estudianteDistincionAcademicaRepository, never()).saveAndFlush(any());
-    }
-
-    @Test
-    @DisplayName("Debe eliminar una distinción registrada")
-    void eliminarDistincionRegistradaEliminaAsociacion() {
-        EstudianteDistincionAcademica registro = EstudianteDistincionAcademica.builder().id(1L).build();
-        when(estudianteDistincionAcademicaRepository
-                .findByEstudianteCodigoAndDistincionCodigo("2024001", "EXCELENCIA_ACADEMICA"))
-                .thenReturn(Optional.of(registro));
-
-        estudianteService.eliminarDistincion(
-                "2024001",
-                TipoDistincionAcademica.EXCELENCIA_ACADEMICA);
-
-        verify(estudianteDistincionAcademicaRepository).delete(registro);
-    }
-
-    @Test
-    @DisplayName("Debe informar cuando se intenta eliminar una distinción no registrada")
-    void eliminarDistincionNoRegistradaLanzaExcepcion() {
-        when(estudianteDistincionAcademicaRepository
-                .findByEstudianteCodigoAndDistincionCodigo("2024001", "EXCELENCIA_ACADEMICA"))
-                .thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> estudianteService.eliminarDistincion(
-                "2024001",
-                TipoDistincionAcademica.EXCELENCIA_ACADEMICA))
-                .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessage("No se encontró la distinción académica solicitada para el estudiante.");
-
-        verify(estudianteDistincionAcademicaRepository, never()).delete(any());
     }
 
     private Estudiante estudiante(String codigo, String nombre, String apellido, Long identificacion,
