@@ -4,6 +4,7 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.Matchers.not;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -15,6 +16,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.jdbc.SqlConfig;
@@ -33,6 +35,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @SqlConfig(encoding = "UTF-8")
 @SqlMergeMode(SqlMergeMode.MergeMode.MERGE)
 @DisplayName("Pruebas de integración de endpoints de hoja de vida")
+@WithMockUser(roles = "COORDINADOR")
 class HojaVidaControllerIT {
 
     @Autowired
@@ -196,7 +199,7 @@ class HojaVidaControllerIT {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.estudiante.codigoEstudiante").value("2024001"))
                 .andExpect(jsonPath("$.estudiante.nombreCompleto").value("Laura Gómez"))
-                .andExpect(jsonPath("$.estudiante.promedioCarrera").value(4.05))
+                .andExpect(jsonPath("$.estudiante.promedioCarrera").value(3.6))
                 .andExpect(jsonPath("$.historiaAcademica.fundamentacion.asignaturas[0].notaDefinitiva").value("4.0"))
                 .andExpect(jsonPath("$.historiaAcademica.electivas.asignaturas[0].notaDefinitiva").value("3.4"))
                 .andExpect(jsonPath("$.historiaAcademica.investigacion.asignaturas[0].notaDefinitiva").value("A"))
@@ -204,7 +207,10 @@ class HojaVidaControllerIT {
                 .andExpect(jsonPath("$.historiaAcademica.informacionAdicional.creditosCumplidos").value(14))
                 .andExpect(jsonPath("$.historiaAcademica.informacionAdicional.tituloTesis").value("Sistema académico"))
                 .andExpect(jsonPath("$.historiaAcademica.informacionAdicional.directorTesis").value("Diana Torres"))
-                .andExpect(jsonPath("$.historiaAcademica.informacionAdicional.codirectorTesis").value("Andrés Ruiz"));
+                .andExpect(jsonPath("$.historiaAcademica.informacionAdicional.codirectorTesis").value("Andrés Ruiz"))
+                .andExpect(jsonPath(
+                        "$.historiaAcademica.informacionAdicional.distincionesAcademicas",
+                        hasSize(0)));
     }
 
     // Caso: historia académica debe mapear reglas especiales y omitir calificaciones no definitivas.
@@ -226,14 +232,17 @@ class HojaVidaControllerIT {
         mockMvc.perform(get("/api/hoja-vida/estudiantes/{codigo}/historia-academica", "2022003"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.estudiante.codigoEstudiante").value("2022003"))
-                .andExpect(jsonPath("$.estudiante.promedioCarrera").value(0))
+                .andExpect(jsonPath("$.estudiante.promedioCarrera").value(nullValue()))
                 .andExpect(jsonPath("$.historiaAcademica.fundamentacion.asignaturas", hasSize(0)))
                 .andExpect(jsonPath("$.historiaAcademica.electivas.asignaturas", hasSize(0)))
                 .andExpect(jsonPath("$.historiaAcademica.investigacion.asignaturas", hasSize(0)))
                 .andExpect(jsonPath("$.historiaAcademica.informacionAdicional.creditosCumplidos").value(0))
                 .andExpect(jsonPath("$.historiaAcademica.informacionAdicional.tituloTesis").value(""))
                 .andExpect(jsonPath("$.historiaAcademica.informacionAdicional.directorTesis").value(""))
-                .andExpect(jsonPath("$.historiaAcademica.informacionAdicional.codirectorTesis").value(""));
+                .andExpect(jsonPath("$.historiaAcademica.informacionAdicional.codirectorTesis").value(""))
+                .andExpect(jsonPath(
+                        "$.historiaAcademica.informacionAdicional.distincionesAcademicas",
+                        hasSize(0)));
     }
 
     // Caso: estudiante inexistente para historia académica debe responder 404.

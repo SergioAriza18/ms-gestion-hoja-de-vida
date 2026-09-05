@@ -9,13 +9,20 @@ import javax.validation.ConstraintViolationException;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.validation.BindException;
+import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.MultipartException;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
 import lombok.extern.slf4j.Slf4j;
@@ -27,7 +34,18 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiError> handleMethodArgumentNotValidException(MethodArgumentNotValidException ex,
             HttpServletRequest request) {
-        String detalleValidacion = ex.getBindingResult()
+        return buildValidationError(ex.getBindingResult(), request);
+    }
+
+    @ExceptionHandler(BindException.class)
+    public ResponseEntity<ApiError> handleBindException(BindException ex, HttpServletRequest request) {
+        return buildValidationError(ex.getBindingResult(), request);
+    }
+
+    private ResponseEntity<ApiError> buildValidationError(
+            BindingResult bindingResult,
+            HttpServletRequest request) {
+        String detalleValidacion = bindingResult
                 .getFieldErrors()
                 .stream()
                 .map(this::formatFieldError)
@@ -114,6 +132,50 @@ public class GlobalExceptionHandler {
                 request.getRequestURI());
     }
 
+    @ExceptionHandler(MissingServletRequestPartException.class)
+    public ResponseEntity<ApiError> handleMissingServletRequestPartException(
+            MissingServletRequestPartException ex,
+            HttpServletRequest request) {
+        return buildError(
+                HttpStatus.BAD_REQUEST,
+                ErrorCodes.BAD_REQUEST,
+                "El archivo '" + ex.getRequestPartName() + "' es obligatorio.",
+                request.getRequestURI());
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ApiError> handleMaxUploadSizeExceededException(
+            MaxUploadSizeExceededException ex,
+            HttpServletRequest request) {
+        return buildError(
+                HttpStatus.PAYLOAD_TOO_LARGE,
+                ErrorCodes.PAYLOAD_TOO_LARGE,
+                "La resolución en PDF supera el tamaño máximo permitido.",
+                request.getRequestURI());
+    }
+
+    @ExceptionHandler(MultipartException.class)
+    public ResponseEntity<ApiError> handleMultipartException(
+            MultipartException ex,
+            HttpServletRequest request) {
+        return buildError(
+                HttpStatus.BAD_REQUEST,
+                ErrorCodes.BAD_REQUEST,
+                "No fue posible procesar el archivo adjunto.",
+                request.getRequestURI());
+    }
+
+    @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
+    public ResponseEntity<ApiError> handleHttpMediaTypeNotSupportedException(
+            HttpMediaTypeNotSupportedException ex,
+            HttpServletRequest request) {
+        return buildError(
+                HttpStatus.UNSUPPORTED_MEDIA_TYPE,
+                ErrorCodes.UNSUPPORTED_MEDIA_TYPE,
+                "El tipo de contenido de la solicitud no es compatible.",
+                request.getRequestURI());
+    }
+
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<ApiError> handleMethodArgumentTypeMismatchException(
             MethodArgumentTypeMismatchException ex,
@@ -125,6 +187,17 @@ public class GlobalExceptionHandler {
                 HttpStatus.BAD_REQUEST,
                 ErrorCodes.BAD_REQUEST,
                 mensaje,
+                request.getRequestURI());
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApiError> handleAccessDeniedException(
+            AccessDeniedException ex,
+            HttpServletRequest request) {
+        return buildError(
+                HttpStatus.FORBIDDEN,
+                ErrorCodes.FORBIDDEN,
+                "No tiene permisos para realizar esta operación.",
                 request.getRequestURI());
     }
 

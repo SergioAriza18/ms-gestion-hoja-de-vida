@@ -11,6 +11,8 @@ import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -24,6 +26,7 @@ import com.maestria.gestion.hoja_de_vida.dto.response.HistoriaAcademicaResponseD
 import com.maestria.gestion.hoja_de_vida.exception.ResourceNotFoundException;
 import com.maestria.gestion.hoja_de_vida.repository.AsignaturaCursadaRepository;
 import com.maestria.gestion.hoja_de_vida.repository.AsignaturaCursadaRepository.AsignaturaCursadaResumen;
+import com.maestria.gestion.hoja_de_vida.repository.EstudianteDistincionAcademicaRepository;
 import com.maestria.gestion.hoja_de_vida.repository.EstudianteRepository;
 import com.maestria.gestion.hoja_de_vida.repository.EstudianteRepository.DirectorCodirectorResumen;
 import com.maestria.gestion.hoja_de_vida.repository.PasantiaRepository;
@@ -49,6 +52,9 @@ class HistoriaAcademicaServiceImplTest {
 
     @Mock
     private PracticaRepository practicaRepository;
+
+    @Mock
+    private EstudianteDistincionAcademicaRepository estudianteDistincionAcademicaRepository;
 
     @InjectMocks
     private HistoriaAcademicaServiceImpl historiaAcademicaService;
@@ -88,11 +94,13 @@ class HistoriaAcademicaServiceImplTest {
         when(estudianteRepository.findDirectorCodirectorByEstudianteId(1L))
                 .thenReturn(Optional.of(directorCodirector("Diana Torres", "Andrés Ruiz")));
 
+        when(estudianteDistincionAcademicaRepository.findCodigosByEstudianteId(1L)).thenReturn(List.of());
+
         HistoriaAcademicaResponseDTO resultado = historiaAcademicaService.obtenerHistoriaAcademica("2024001");
 
         assertThat(resultado.getEstudiante().getCodigoEstudiante()).isEqualTo("2024001");
         assertThat(resultado.getEstudiante().getNombreCompleto()).isEqualTo("Laura Gómez");
-        assertThat(resultado.getEstudiante().getPromedioCarrera()).isEqualByComparingTo(new BigDecimal("4.18"));
+        assertThat(resultado.getEstudiante().getPromedioCarrera()).isEqualByComparingTo(new BigDecimal("3.6"));
 
         assertThat(resultado.getHistoriaAcademica().getFundamentacion().getAsignaturas()).hasSize(1);
         assertThat(resultado.getHistoriaAcademica().getElectivas().getAsignaturas()).hasSize(1);
@@ -111,7 +119,7 @@ class HistoriaAcademicaServiceImplTest {
     }
 
     @Test
-    @DisplayName("Debe retornar promedio cero y textos vacíos cuando no hay información adicional")
+    @DisplayName("Debe retornar promedio nulo y textos vacíos cuando no hay información adicional")
     void obtenerHistoriaAcademicaSinNotasNiInformacionAdicionalRetornaValoresPorDefecto() {
         Estudiante estudiante = estudiante();
         when(estudianteRepository.findByCodigo("2024001")).thenReturn(Optional.of(estudiante));
@@ -122,13 +130,42 @@ class HistoriaAcademicaServiceImplTest {
         when(estudianteRepository.findTituloTesisByEstudianteId(1L)).thenReturn(Optional.empty());
         when(estudianteRepository.findDirectorCodirectorByEstudianteId(1L)).thenReturn(Optional.empty());
 
+        when(estudianteDistincionAcademicaRepository.findCodigosByEstudianteId(1L)).thenReturn(List.of());
+
         HistoriaAcademicaResponseDTO resultado = historiaAcademicaService.obtenerHistoriaAcademica("2024001");
 
-        assertThat(resultado.getEstudiante().getPromedioCarrera()).isEqualByComparingTo(BigDecimal.ZERO);
+        assertThat(resultado.getEstudiante().getPromedioCarrera()).isNull();
         assertThat(resultado.getHistoriaAcademica().getInformacionAdicional().getCreditosCumplidos()).isZero();
         assertThat(resultado.getHistoriaAcademica().getInformacionAdicional().getTituloTesis()).isEmpty();
         assertThat(resultado.getHistoriaAcademica().getInformacionAdicional().getDirectorTesis()).isEmpty();
         assertThat(resultado.getHistoriaAcademica().getInformacionAdicional().getCodirectorTesis()).isEmpty();
+    }
+
+    @ParameterizedTest(name = "promedio {0} se muestra como {1}")
+    @CsvSource({
+            "3.47, 3.5",
+            "4.44, 4.4",
+            "4.55, 4.5",
+            "4.56, 4.6",
+            "4.65, 4.6",
+            "4.66, 4.7",
+            "4.75, 4.7",
+            "4.76, 4.8"
+    })
+    @DisplayName("Debe aproximar el promedio a un decimal desde seis centésimas")
+    void consultarPromedioCarreraAproximaAUnDecimalDesdeSeisCentesimas(
+            String nota,
+            String promedioEsperado) {
+        when(asignaturaCursadaRepository.findAsignaturasResumenByEstudianteId(1L))
+                .thenReturn(List.of(asignatura(
+                        5L,
+                        "M10001",
+                        "Fundamentos de computación",
+                        4,
+                        new BigDecimal(nota))));
+
+        assertThat(historiaAcademicaService.consultarPromedioCarrera(1L))
+                .isEqualByComparingTo(new BigDecimal(promedioEsperado));
     }
 
     private Estudiante estudiante() {

@@ -2,8 +2,8 @@ package com.maestria.gestion.hoja_de_vida.service.impl;
 
 import java.util.List;
 
-import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Sort;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.maestria.gestion.hoja_de_vida.dto.response.EstudianteBusquedaDTO;
