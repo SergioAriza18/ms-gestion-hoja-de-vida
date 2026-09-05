@@ -21,6 +21,8 @@ import com.maestria.gestion.hoja_de_vida.dto.response.PublicacionDTO;
 import com.maestria.gestion.hoja_de_vida.repository.AsignaturaCursadaRepository.AsignaturaCursadaResumen;
 
 import static com.maestria.gestion.hoja_de_vida.common.HistoriaAcademicaConstants.NOTA_A;
+import static com.maestria.gestion.hoja_de_vida.common.HistoriaAcademicaConstants.APROXIMACION_NOTA_INSTITUCIONAL;
+import static com.maestria.gestion.hoja_de_vida.common.HistoriaAcademicaConstants.ESCALA_NOTA_MOSTRADA;
 import static com.maestria.gestion.hoja_de_vida.common.HistoriaAcademicaConstants.NOTA_APROBATORIA;
 import static com.maestria.gestion.hoja_de_vida.common.HistoriaAcademicaConstants.NOTA_MAXIMA;
 import static com.maestria.gestion.hoja_de_vida.common.HistoriaAcademicaConstants.NOTA_MINIMA;
@@ -67,8 +69,7 @@ public class HistoriaAcademicaMapper {
         }
 
         private static String formatearNota(BigDecimal nota) {
-                String valorNormalizado = nota.stripTrailingZeros().toPlainString();
-                return valorNormalizado.contains(".") ? valorNormalizado : valorNormalizado + ".0";
+                return nota.setScale(ESCALA_NOTA_MOSTRADA, APROXIMACION_NOTA_INSTITUCIONAL).toPlainString();
         }
 
         public static PasantiaDTO toPasantiaDto(Pasantia pasantia) {

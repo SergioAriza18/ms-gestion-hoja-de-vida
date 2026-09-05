@@ -98,7 +98,7 @@ class HistoriaAcademicaServiceImplTest {
 
         assertThat(resultado.getEstudiante().getCodigoEstudiante()).isEqualTo("2024001");
         assertThat(resultado.getEstudiante().getNombreCompleto()).isEqualTo("Laura Gómez");
-        assertThat(resultado.getEstudiante().getPromedioCarrera()).isEqualByComparingTo(new BigDecimal("3.63"));
+        assertThat(resultado.getEstudiante().getPromedioCarrera()).isEqualByComparingTo(new BigDecimal("3.6"));
 
         assertThat(resultado.getHistoriaAcademica().getFundamentacion().getAsignaturas()).hasSize(1);
         assertThat(resultado.getHistoriaAcademica().getElectivas().getAsignaturas()).hasSize(1);
@@ -137,6 +137,29 @@ class HistoriaAcademicaServiceImplTest {
         assertThat(resultado.getHistoriaAcademica().getInformacionAdicional().getTituloTesis()).isEmpty();
         assertThat(resultado.getHistoriaAcademica().getInformacionAdicional().getDirectorTesis()).isEmpty();
         assertThat(resultado.getHistoriaAcademica().getInformacionAdicional().getCodirectorTesis()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("Debe redondear el promedio a un decimal")
+    void consultarPromedioCarreraRedondeaAUnDecimal() {
+        when(asignaturaCursadaRepository.findAsignaturasResumenByEstudianteId(1L))
+                .thenReturn(List.of(asignatura(
+                        5L,
+                        "M10001",
+                        "Fundamentos de computación",
+                        4,
+                        new BigDecimal("3.47"))))
+                .thenReturn(List.of(asignatura(
+                        6L,
+                        "M10002",
+                        "Electiva avanzada",
+                        3,
+                        new BigDecimal("4.56"))));
+
+        assertThat(historiaAcademicaService.consultarPromedioCarrera(1L))
+                .isEqualByComparingTo(new BigDecimal("3.5"));
+        assertThat(historiaAcademicaService.consultarPromedioCarrera(1L))
+                .isEqualByComparingTo(new BigDecimal("4.6"));
     }
 
     private Estudiante estudiante() {

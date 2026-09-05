@@ -1,6 +1,7 @@
 package com.maestria.gestion.hoja_de_vida.common;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Set;
 
 public final class HistoriaAcademicaConstants {
@@ -20,6 +21,8 @@ public final class HistoriaAcademicaConstants {
     public static final BigDecimal NOTA_APROBATORIA = BigDecimal.valueOf(3.5);
     public static final BigDecimal NOTA_MAXIMA = BigDecimal.valueOf(5);
     public static final BigDecimal PROMEDIO_MINIMO_EXCELENCIA = BigDecimal.valueOf(4.8);
+    public static final int ESCALA_NOTA_MOSTRADA = 1;
+    public static final RoundingMode APROXIMACION_NOTA_INSTITUCIONAL = RoundingMode.HALF_DOWN;
     public static final String NOTA_NA = "NA";
     public static final String NOTA_A = "A";
     public static final String NOTA_NR = "NR";

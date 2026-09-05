@@ -1,7 +1,6 @@
 package com.maestria.gestion.hoja_de_vida.service.impl;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.List;
 import java.util.Set;
 
@@ -36,6 +35,8 @@ import static com.maestria.gestion.hoja_de_vida.common.HistoriaAcademicaConstant
 import static com.maestria.gestion.hoja_de_vida.common.HistoriaAcademicaConstants.AREA_FUNDAMENTACION;
 import static com.maestria.gestion.hoja_de_vida.common.HistoriaAcademicaConstants.AREA_INVESTIGACION;
 import static com.maestria.gestion.hoja_de_vida.common.HistoriaAcademicaConstants.AREA_REQUISITOS_GRADO;
+import static com.maestria.gestion.hoja_de_vida.common.HistoriaAcademicaConstants.APROXIMACION_NOTA_INSTITUCIONAL;
+import static com.maestria.gestion.hoja_de_vida.common.HistoriaAcademicaConstants.ESCALA_NOTA_MOSTRADA;
 import static com.maestria.gestion.hoja_de_vida.common.HistoriaAcademicaConstants.NOTA_APROBATORIA;
 import static com.maestria.gestion.hoja_de_vida.common.HistoriaAcademicaConstants.VALOR_TEXTO_VACIO;
 import static com.maestria.gestion.hoja_de_vida.common.HistoriaAcademicaRules.esMateriaEspecial;
@@ -210,7 +211,10 @@ public class HistoriaAcademicaServiceImpl implements HistoriaAcademicaService {
                         return null;
                 }
 
-                return sumaNotas.divide(BigDecimal.valueOf(totalNotas), 2, RoundingMode.HALF_UP);
+                return sumaNotas.divide(
+                                BigDecimal.valueOf(totalNotas),
+                                ESCALA_NOTA_MOSTRADA,
+                                APROXIMACION_NOTA_INSTITUCIONAL);
         }
 
 }
