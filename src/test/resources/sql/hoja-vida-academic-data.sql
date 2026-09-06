@@ -19,21 +19,31 @@ INSERT INTO matricula_calificaciones (id, id_matricula, id_asignatura, nota, es_
     (6, 1, 6, 3.4, TRUE, TIMESTAMP '2024-06-01 10:00:00'),
     (7, 1, 7, 5.0, FALSE, TIMESTAMP '2024-06-01 10:00:00');
 
-INSERT INTO publicaciones (id, creditospub, numactapub, titulopubli, tipopub, indexadapub, fechaaceptacion, linkpublicacion) VALUES
-    (1, 1, 'ACT-PUB-1', 'Artículo de investigación', 'Revista', 'Q2', DATE '2024-04-10', 'https://example.test/publicacion'),
-    (2, NULL, 'ACT-PUB-2', 'Publicación sin créditos', 'Revista', 'Q3', DATE '2024-04-11', 'https://example.test/publicacion-sin-creditos');
+INSERT INTO publicaciones
+    (id, codigopubli, creditospub, numactapub, titulopubli, tipopub, nombrerevista,
+     indexadapub, fechaaceptacion, linkpublicacion)
+VALUES
+    (1, 1001, 1, 'ACT-PUB-1', 'Artículo de investigación', 'Revista', 'Revista de Tecnología',
+     'Q2', DATE '2024-04-10', 'https://example.test/publicacion'),
+    (2, 1002, NULL, 'ACT-PUB-2', 'Publicación sin créditos', 'Revista', 'Revista de Ingeniería',
+     'Q3', DATE '2024-04-11', 'https://example.test/publicacion-sin-creditos');
 
 INSERT INTO estudiantes_publicacion (id_estudiante, idpublicacion) VALUES
     (1, 1),
     (1, 2);
 
-INSERT INTO pasantias (id, id_estudiante, creditospas, numactapas, fechaactapas, informepasantia) VALUES
-    (1, 1, 2, 'ACT-PAS-1', '2024-05-20', 'Informe de pasantía'),
-    (2, 1, -1, 'ACT-PAS-2', '2024-05-21', 'Créditos no válidos');
+INSERT INTO pasantias
+    (id, id_estudiante, creditospas, numactapas, fechaactapas, informepasantia, lugar_pasantia)
+VALUES
+    (1, 1, 2, 'ACT-PAS-1', '2024-05-20', 'Informe de pasantía', 'Popayán, Cauca, Colombia'),
+    (2, 1, -1, 'ACT-PAS-2', '2024-05-21', 'Créditos no válidos', NULL);
 
-INSERT INTO practicas (id, id_estudiante, creditosprac, numactaprac, horastotales) VALUES
-    (1, 1, 1, 'ACT-PRA-1', 64),
-    (2, 1, -1, 'ACT-PRA-2', 32);
+INSERT INTO practicas (id, id_estudiante, creditosprac, numactaprac, fechaactaprac, horastotales) VALUES
+    (1, 1, 1, 'ACT-PRA-1', DATE '2024-05-22', 64),
+    (2, 1, -1, 'ACT-PRA-2', NULL, 32);
+
+INSERT INTO actividades (id, idpractica, nombreact, tipoact) VALUES
+    (1, 1, 'Programación Orientada a Objetos', 'DOCENCIA');
 
 INSERT INTO trabajos_grado (id, id_estudiante, titulo) VALUES
     (1, 1, 'Sistema académico'),

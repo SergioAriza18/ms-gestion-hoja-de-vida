@@ -8,12 +8,15 @@ import lombok.Setter;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
 @Entity
@@ -40,6 +43,18 @@ public class Estudiante {
 
     @Column(name = "periodo_ingreso")
     private String periodoIngreso;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "estado_maestria")
+    private EstadoMaestria estadoMaestria;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "modalidad")
+    private ModalidadAcademica modalidadAcademica;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_grupo_investigacion")
+    private GrupoInvestigacion grupoInvestigacion;
 
     @OneToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "id_persona", nullable = false, unique = true)

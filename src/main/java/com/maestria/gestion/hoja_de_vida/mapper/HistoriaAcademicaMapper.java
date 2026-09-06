@@ -8,11 +8,13 @@ import com.maestria.gestion.hoja_de_vida.domain.Pasantia;
 import com.maestria.gestion.hoja_de_vida.domain.Practica;
 import com.maestria.gestion.hoja_de_vida.domain.Publicacion;
 import com.maestria.gestion.hoja_de_vida.dto.response.AreaAcademicaDTO;
+import com.maestria.gestion.hoja_de_vida.dto.response.ActividadPracticaDTO;
 import com.maestria.gestion.hoja_de_vida.dto.response.AsignaturaCursadaDTO;
 import com.maestria.gestion.hoja_de_vida.dto.response.ComplementacionDTO;
 import com.maestria.gestion.hoja_de_vida.dto.response.EstudianteHistoriaAcademicaDTO;
 import com.maestria.gestion.hoja_de_vida.dto.response.HistoriaAcademicaDTO;
 import com.maestria.gestion.hoja_de_vida.dto.response.HistoriaAcademicaResponseDTO;
+import com.maestria.gestion.hoja_de_vida.dto.response.GrupoInvestigacionDTO;
 import com.maestria.gestion.hoja_de_vida.dto.response.InformacionAdicionalDTO;
 import com.maestria.gestion.hoja_de_vida.dto.response.InvestigacionDTO;
 import com.maestria.gestion.hoja_de_vida.dto.response.PasantiaDTO;
@@ -78,15 +80,18 @@ public class HistoriaAcademicaMapper {
                                 .acta(pasantia.getActa())
                                 .fechaActa(pasantia.getFechaActa())
                                 .informePasantia(pasantia.getInformePasantia())
+                                .lugarPasantia(pasantia.getLugarPasantia())
                                 .build();
         }
 
         public static PublicacionDTO toPublicacionDto(Publicacion publicacion) {
                 return PublicacionDTO.builder()
+                                .codigoPublicacion(publicacion.getCodigoPublicacion())
                                 .creditosAsignados(publicacion.getCreditosAsignados())
                                 .acta(publicacion.getActa())
                                 .nombrePublicacion(publicacion.getNombrePublicacion())
                                 .tipoPublicacion(publicacion.getTipoPublicacion())
+                                .nombreRevista(publicacion.getNombreRevista())
                                 .categoriaIndexada(publicacion.getCategoriaIndexada())
                                 .fechaAceptacion(publicacion.getFechaAceptacion())
                                 .urlPublicacion(publicacion.getUrlPublicacion())
@@ -97,7 +102,14 @@ public class HistoriaAcademicaMapper {
                 return PracticaDTO.builder()
                                 .creditosAsignados(practica.getCreditosAsignados())
                                 .acta(practica.getActa())
+                                .fechaActa(practica.getFechaActa())
                                 .horas(practica.getHoras())
+                                .actividades(practica.getActividades().stream()
+                                                .map(actividad -> ActividadPracticaDTO.builder()
+                                                                .nombreActividad(actividad.getNombreActividad())
+                                                                .tipoActividad(actividad.getTipoActividad())
+                                                                .build())
+                                                .toList())
                                 .build();
         }
 
@@ -158,7 +170,10 @@ public class HistoriaAcademicaMapper {
                                 .correoUniversidad(estudiante.getCorreoUniversidad())
                                 .periodoIngreso(estudiante.getPeriodoIngreso())
                                 .semestreAcademico(estudiante.getSemestreAcademico())
+                                .estadoMaestria(estudiante.getEstadoMaestria())
                                 .promedioCarrera(promedioCarrera)
+                                .modalidadAcademica(estudiante.getModalidadAcademica())
+                                .grupoInvestigacion(toGrupoInvestigacionDto(estudiante))
                                 .build();
 
                 HistoriaAcademicaDTO historiaAcademica = HistoriaAcademicaDTO.builder()
@@ -177,5 +192,16 @@ public class HistoriaAcademicaMapper {
 
         private static String toStringOrNull(Long value) {
                 return value == null ? null : value.toString();
+        }
+
+        private static GrupoInvestigacionDTO toGrupoInvestigacionDto(Estudiante estudiante) {
+                if (estudiante.getGrupoInvestigacion() == null) {
+                        return null;
+                }
+
+                return GrupoInvestigacionDTO.builder()
+                                .sigla(estudiante.getGrupoInvestigacion().getSigla())
+                                .nombre(estudiante.getGrupoInvestigacion().getNombre())
+                                .build();
         }
 }
