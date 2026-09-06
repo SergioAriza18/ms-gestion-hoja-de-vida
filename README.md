@@ -67,6 +67,7 @@ Las variables opcionales para producción y sus valores predeterminados se encue
 | Perfil | Uso | Base de datos | Swagger |
 | --- | --- | --- | --- |
 | `dev` | Desarrollo local y perfil predeterminado | MySQL | Habilitado |
+| `demo` | Validación temporal sin el microservicio de autenticación | MySQL | Habilitado |
 | `test` | Pruebas automatizadas | H2 compatible con MySQL | Uso interno |
 | `prod` | Despliegue productivo | MySQL | Deshabilitado |
 
@@ -79,6 +80,25 @@ Las variables opcionales para producción y sus valores predeterminados se encue
 ```
 
 Por defecto, el servicio queda disponible en `http://localhost:8080`.
+
+### Demostración temporal
+
+Configure en `.env` las variables `HOJA_VIDA_DEMO_*` de `.env.example` y habilite expresamente el acceso temporal:
+
+```dotenv
+HOJA_VIDA_DEMO_AUTH_ENABLED=true
+HOJA_VIDA_DEMO_STUDENT_CODE=IS20260157
+```
+
+Inicie el servicio con el perfil dedicado:
+
+```powershell
+mvn spring-boot:run "-Dspring-boot.run.profiles=demo"
+```
+
+El frontend puede consultar `GET /api/demo/auth/perfiles` y solicitar una sesión mediante
+`POST /api/demo/auth/token`. Estos endpoints no se crean con los perfiles `dev`, `test` o `prod`.
+El perfil `demo` admite automáticamente los túneles temporales `https://*.trycloudflare.com`.
 
 ### Construcción y verificación
 
@@ -167,5 +187,5 @@ Las pruebas de integración utilizan H2 en modo compatible con MySQL y validan l
 - **El backend no inicia:** compruebe que MySQL esté disponible, el esquema exista y las credenciales de `.env` sean correctas.
 - **Respuesta `401`:** verifique el encabezado, la vigencia del token y que ambos microservicios utilicen la misma clave JWT.
 - **Respuesta `403`:** el token es válido, pero el rol o el código académico no permiten realizar la operación.
-- **Error de CORS:** agregue el origen exacto del frontend a `HOJA_VIDA_CORS_ALLOWED_ORIGINS`.
+- **Error de CORS:** fuera del perfil `demo`, agregue el origen exacto del frontend a `HOJA_VIDA_CORS_ALLOWED_ORIGINS`.
 - **Swagger UI no aparece:** compruebe que la aplicación no se esté ejecutando con el perfil `prod`.

@@ -7,6 +7,8 @@ import javax.crypto.spec.SecretKeySpec;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.Profiles;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
@@ -33,19 +35,29 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(
             HttpSecurity http,
             SecurityErrorHandler securityErrorHandler,
-            JwtAuthenticationConverter jwtAuthenticationConverter) throws Exception {
+            JwtAuthenticationConverter jwtAuthenticationConverter,
+            AccesoDemoProperties accesoDemoProperties,
+            Environment environment) throws Exception {
+        boolean accesoDemoHabilitado = accesoDemoProperties.isEnabled()
+                && environment.acceptsProfiles(Profiles.of("demo"))
+                && !environment.acceptsProfiles(Profiles.of("prod"));
+
         http
                 .csrf().disable()
                 .cors(Customizer.withDefaults())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeRequests(authorize -> authorize
-                        .antMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .antMatchers(
-                                "/v3/api-docs/**",
-                                "/swagger-ui.html",
-                                "/swagger-ui/**")
-                        .permitAll()
-                        .anyRequest().authenticated())
+                .authorizeRequests(authorize -> {
+                    authorize.antMatchers(HttpMethod.OPTIONS, "/**").permitAll();
+                    authorize.antMatchers(
+                            "/v3/api-docs/**",
+                            "/swagger-ui.html",
+                            "/swagger-ui/**")
+                            .permitAll();
+                    if (accesoDemoHabilitado) {
+                        authorize.antMatchers("/api/demo/auth/**").permitAll();
+                    }
+                    authorize.anyRequest().authenticated();
+                })
                 .exceptionHandling(exceptions -> exceptions
                         .authenticationEntryPoint(securityErrorHandler)
                         .accessDeniedHandler(securityErrorHandler))
@@ -58,7 +70,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public JwtDecoder jwtDecoder(JwtSecurityProperties properties) {
+    public SecretKey jwtSecretKey(JwtSecurityProperties properties) {
         byte[] keyBytes;
         try {
             keyBytes = Base64.getDecoder().decode(properties.getSecret());
@@ -71,8 +83,12 @@ public class SecurityConfig {
                     "HOJA_VIDA_JWT_SECRET debe representar al menos 64 bytes para utilizar HS512.");
         }
 
-        SecretKey secretKey = new SecretKeySpec(keyBytes, "HmacSHA512");
-        return NimbusJwtDecoder.withSecretKey(secretKey)
+        return new SecretKeySpec(keyBytes, "HmacSHA512");
+    }
+
+    @Bean
+    public JwtDecoder jwtDecoder(SecretKey jwtSecretKey) {
+        return NimbusJwtDecoder.withSecretKey(jwtSecretKey)
                 .macAlgorithm(MacAlgorithm.HS512)
                 .build();
     }

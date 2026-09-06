@@ -58,6 +58,14 @@ class SeguridadControllerIT {
     }
 
     @Test
+    @DisplayName("Debe mantener deshabilitado el acceso demo en el perfil de pruebas normal")
+    void accesoDemoSinPerfilDemoRetornaUnauthorized() throws Exception {
+        mockMvc.perform(get("/api/demo/auth/perfiles"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.codigo").value("UNAUTHORIZED"));
+    }
+
+    @Test
     @DisplayName("Debe responder 401 cuando el token está manipulado")
     void listarConTokenManipuladoRetornaUnauthorized() throws Exception {
         String tokenManipulado = token(List.of("ROLE_COORDINADOR"), null) + "x";

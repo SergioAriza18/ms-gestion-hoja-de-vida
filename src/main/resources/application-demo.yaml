@@ -1,0 +1,33 @@
+spring:
+  datasource:
+    url: ${HOJA_VIDA_DB_URL}
+    username: ${HOJA_VIDA_DB_USERNAME}
+    password: ${HOJA_VIDA_DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+        dialect: org.hibernate.dialect.MySQL8Dialect
+
+app:
+  cors:
+    allowed-origins: ${HOJA_VIDA_CORS_ALLOWED_ORIGINS:http://localhost:4200}
+    allowed-origin-patterns: ${HOJA_VIDA_CORS_ALLOWED_ORIGIN_PATTERNS:https://*.trycloudflare.com}
+  demo-auth:
+    enabled: ${HOJA_VIDA_DEMO_AUTH_ENABLED:false}
+    token-validity: ${HOJA_VIDA_DEMO_TOKEN_VALIDITY:4h}
+    coordinator-name: ${HOJA_VIDA_DEMO_COORDINATOR_NAME:Coordinador de demostración}
+    student-name: ${HOJA_VIDA_DEMO_STUDENT_NAME:Ana - estudiante de demostración}
+    student-code: ${HOJA_VIDA_DEMO_STUDENT_CODE:IS20260157}
+
+logging:
+  level:
+    root: INFO
+    org.hibernate.SQL: WARN
+    org.springframework.web: INFO
+    org.springframework.security: INFO
