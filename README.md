@@ -98,6 +98,36 @@ Para ejecutarlo con el perfil de producción:
 java -jar target/ms-gestion-hoja-de-vida-0.0.1-SNAPSHOT.jar --spring.profiles.active=prod
 ```
 
+## Imagen Docker
+
+La imagen se construye en dos etapas y ejecuta el microservicio con Java 17, el perfil `prod` y un usuario sin privilegios. Incluye comprobación de salud y cierre controlado.
+
+```powershell
+docker build `
+  --build-arg APP_VERSION=1.0.0 `
+  --build-arg VCS_REF=<hash-del-commit> `
+  -t ms-gestion-hoja-de-vida:1.0.0 .
+```
+
+Para ejecutarla utilizando las variables del archivo `.env`:
+
+```powershell
+docker run --rm --name ms-gestion-hoja-de-vida `
+  --env-file .env `
+  -e SPRING_PROFILES_ACTIVE=prod `
+  -p 8080:8080 `
+  --stop-timeout 35 `
+  ms-gestion-hoja-de-vida:1.0.0
+```
+
+Si MySQL se ejecuta directamente en Windows, `HOJA_VIDA_DB_URL` debe utilizar `host.docker.internal` en lugar de `localhost`. Si MySQL se encuentra en otro contenedor, ambos deben compartir una red Docker y la URL debe usar el nombre de ese servicio.
+
+En producción, las credenciales y la clave JWT deben configurarse como secretos de la plataforma; la aplicación también admite secretos montados como archivos en `/run/secrets/`. El esquema y sus migraciones deben ejecutarse antes de iniciar esta imagen, porque Hibernate solo valida las tablas existentes.
+
+El estado del contenedor se consulta internamente mediante `/actuator/health/readiness`. El endpoint no revela detalles sensibles.
+
+El procedimiento de versionado, validación, publicación en Docker Hub, preparación de base de datos y entrega a TICS se encuentra en [DEPLOYMENT.md](DEPLOYMENT.md).
+
 ## Autenticación y roles
 
 Los endpoints de negocio requieren un JWT válido en el encabezado:

@@ -3,7 +3,9 @@ spring:
     name: ms-gestion-hoja-de-vida
 
   config:
-    import: optional:file:.env[.properties]
+    import:
+      - optional:file:.env[.properties]
+      - optional:configtree:/run/secrets/
 
   profiles:
     default: dev

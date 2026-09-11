@@ -43,7 +43,9 @@ public class SecurityConfig {
                         .antMatchers(
                                 "/v3/api-docs/**",
                                 "/swagger-ui.html",
-                                "/swagger-ui/**")
+                                "/swagger-ui/**",
+                                "/actuator/health",
+                                "/actuator/health/**")
                         .permitAll()
                         .anyRequest().authenticated())
                 .exceptionHandling(exceptions -> exceptions
