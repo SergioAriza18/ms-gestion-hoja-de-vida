@@ -28,6 +28,9 @@ public class Publicacion {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "codigopubli", nullable = false)
+    private Integer codigoPublicacion;
+
     @Column(name = "creditospub")
     private Integer creditosAsignados;
 
@@ -39,6 +42,9 @@ public class Publicacion {
 
     @Column(name = "tipopub", nullable = false)
     private String tipoPublicacion;
+
+    @Column(name = "nombrerevista", nullable = false)
+    private String nombreRevista;
 
     @Column(name = "indexadapub")
     private String categoriaIndexada;

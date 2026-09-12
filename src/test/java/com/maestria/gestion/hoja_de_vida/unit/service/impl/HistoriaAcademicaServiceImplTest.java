@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -17,7 +18,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.maestria.gestion.hoja_de_vida.domain.ActividadPractica;
+import com.maestria.gestion.hoja_de_vida.domain.EstadoMaestria;
 import com.maestria.gestion.hoja_de_vida.domain.Estudiante;
+import com.maestria.gestion.hoja_de_vida.domain.GrupoInvestigacion;
+import com.maestria.gestion.hoja_de_vida.domain.ModalidadAcademica;
 import com.maestria.gestion.hoja_de_vida.domain.Pasantia;
 import com.maestria.gestion.hoja_de_vida.domain.Persona;
 import com.maestria.gestion.hoja_de_vida.domain.Practica;
@@ -83,13 +88,25 @@ class HistoriaAcademicaServiceImplTest {
         when(estudianteRepository.findByCodigo("2024001")).thenReturn(Optional.of(estudiante));
         when(asignaturaCursadaRepository.findAsignaturasResumenByEstudianteId(1L)).thenReturn(asignaturas);
         when(pasantiaRepository.findAllByIdEstudiante(1L)).thenReturn(List.of(
-                Pasantia.builder().creditosAsignados(2).acta("ACT-1").build(),
+                Pasantia.builder().creditosAsignados(2).acta("ACT-1")
+                        .lugarPasantia("Popayán, Cauca, Colombia").build(),
                 Pasantia.builder().creditosAsignados(-1).acta("ACT-2").build()));
         when(publicacionRepository.findAllByIdEstudiante(1L)).thenReturn(List.of(
-                Publicacion.builder().creditosAsignados(1).nombrePublicacion("Artículo").tipoPublicacion("Revista")
+                Publicacion.builder().codigoPublicacion(1001).creditosAsignados(1).nombrePublicacion("Artículo")
+                        .tipoPublicacion("Revista").nombreRevista("Revista de Tecnología")
+                        .urlPublicacion("https://example.test/publicacion")
                         .build()));
         when(practicaRepository.findAllByIdEstudiante(1L)).thenReturn(List.of(
-                Practica.builder().creditosAsignados(1).acta("ACT-3").build()));
+                Practica.builder()
+                        .creditosAsignados(1)
+                        .acta("ACT-3")
+                        .fechaActa(LocalDate.of(2024, 5, 22))
+                        .actividades(List.of(
+                                ActividadPractica.builder()
+                                        .nombreActividad("Programación Orientada a Objetos")
+                                        .tipoActividad("DOCENCIA")
+                                        .build()))
+                        .build()));
         when(estudianteRepository.findTituloTesisByEstudianteId(1L)).thenReturn(Optional.of("Sistema académico"));
         when(estudianteRepository.findDirectorCodirectorByEstudianteId(1L))
                 .thenReturn(Optional.of(directorCodirector("Diana Torres", "Andrés Ruiz")));
@@ -101,6 +118,11 @@ class HistoriaAcademicaServiceImplTest {
         assertThat(resultado.getEstudiante().getCodigoEstudiante()).isEqualTo("2024001");
         assertThat(resultado.getEstudiante().getNombreCompleto()).isEqualTo("Laura Gómez");
         assertThat(resultado.getEstudiante().getPromedioCarrera()).isEqualByComparingTo(new BigDecimal("3.6"));
+        assertThat(resultado.getEstudiante().getEstadoMaestria()).isEqualTo(EstadoMaestria.ACTIVO);
+        assertThat(resultado.getEstudiante().getModalidadAcademica()).isEqualTo(ModalidadAcademica.INVESTIGACION);
+        assertThat(resultado.getEstudiante().getGrupoInvestigacion().getSigla()).isEqualTo("GTI");
+        assertThat(resultado.getEstudiante().getGrupoInvestigacion().getNombre())
+                .isEqualTo("Grupo de I+D en Tecnologías de la Información");
 
         assertThat(resultado.getHistoriaAcademica().getFundamentacion().getAsignaturas()).hasSize(1);
         assertThat(resultado.getHistoriaAcademica().getElectivas().getAsignaturas()).hasSize(1);
@@ -116,6 +138,22 @@ class HistoriaAcademicaServiceImplTest {
                 .isEqualTo("Diana Torres");
         assertThat(resultado.getHistoriaAcademica().getInformacionAdicional().getCodirectorTesis())
                 .isEqualTo("Andrés Ruiz");
+        assertThat(resultado.getHistoriaAcademica().getInvestigacion().getPasantias().get(0).getLugarPasantia())
+                .isEqualTo("Popayán, Cauca, Colombia");
+        assertThat(resultado.getHistoriaAcademica().getInvestigacion().getPublicaciones().get(0))
+                .satisfies(publicacion -> {
+                    assertThat(publicacion.getCodigoPublicacion()).isEqualTo(1001);
+                    assertThat(publicacion.getNombreRevista()).isEqualTo("Revista de Tecnología");
+                    assertThat(publicacion.getUrlPublicacion()).isEqualTo("https://example.test/publicacion");
+                });
+        assertThat(resultado.getHistoriaAcademica().getComplementacion().getPracticasDocentes().get(0))
+                .satisfies(practica -> {
+                    assertThat(practica.getFechaActa()).isEqualTo(LocalDate.of(2024, 5, 22));
+                    assertThat(practica.getActividades()).singleElement().satisfies(actividad -> {
+                        assertThat(actividad.getNombreActividad()).isEqualTo("Programación Orientada a Objetos");
+                        assertThat(actividad.getTipoActividad()).isEqualTo("DOCENCIA");
+                    });
+                });
     }
 
     @Test
@@ -175,6 +213,13 @@ class HistoriaAcademicaServiceImplTest {
                 .correoUniversidad("laura.gomez@universidad.edu")
                 .periodoIngreso("2024-1")
                 .semestreAcademico(2)
+                .estadoMaestria(EstadoMaestria.ACTIVO)
+                .modalidadAcademica(ModalidadAcademica.INVESTIGACION)
+                .grupoInvestigacion(GrupoInvestigacion.builder()
+                        .id(1L)
+                        .sigla("GTI")
+                        .nombre("Grupo de I+D en Tecnologías de la Información")
+                        .build())
                 .persona(Persona.builder()
                         .nombre("Laura")
                         .apellido("Gómez")

@@ -13,10 +13,12 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class PublicacionDTO {
 
+    private Integer codigoPublicacion;
     private Integer creditosAsignados;
     private String acta;
     private String nombrePublicacion;
     private String tipoPublicacion;
+    private String nombreRevista;
     private String categoriaIndexada;
     private LocalDate fechaAceptacion;
     private String urlPublicacion;

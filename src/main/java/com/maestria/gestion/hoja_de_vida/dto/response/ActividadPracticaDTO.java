@@ -9,11 +9,8 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class PasantiaDTO {
+public class ActividadPracticaDTO {
 
-    private Integer creditosAsignados;
-    private String acta;
-    private String fechaActa;
-    private String informePasantia;
-    private String lugarPasantia;
+    private String nombreActividad;
+    private String tipoActividad;
 }

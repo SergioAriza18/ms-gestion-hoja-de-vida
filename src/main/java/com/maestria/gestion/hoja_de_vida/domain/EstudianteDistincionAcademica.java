@@ -3,15 +3,17 @@ package com.maestria.gestion.hoja_de_vida.domain;
 import java.time.LocalDate;
 
 import javax.persistence.Column;
+import javax.persistence.Convert;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+
+import com.maestria.gestion.hoja_de_vida.converter.ArchivoBase64Converter;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -46,7 +48,7 @@ public class EstudianteDistincionAcademica {
     @Column(name = "fecha_resolucion", nullable = false)
     private LocalDate fechaResolucion;
 
-    @Lob
-    @Column(name = "resolucion_pdf", nullable = false, columnDefinition = "MEDIUMBLOB")
+    @Convert(converter = ArchivoBase64Converter.class)
+    @Column(name = "resolucion_pdf", nullable = false, columnDefinition = "MEDIUMTEXT")
     private byte[] resolucionPdf;
 }
