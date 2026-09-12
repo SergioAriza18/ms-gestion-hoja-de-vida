@@ -18,6 +18,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.maestria.gestion.hoja_de_vida.client.GestionSolicitudesClient;
 import com.maestria.gestion.hoja_de_vida.domain.ActividadPractica;
 import com.maestria.gestion.hoja_de_vida.domain.EstadoMaestria;
 import com.maestria.gestion.hoja_de_vida.domain.Estudiante;
@@ -28,6 +29,8 @@ import com.maestria.gestion.hoja_de_vida.domain.Persona;
 import com.maestria.gestion.hoja_de_vida.domain.Practica;
 import com.maestria.gestion.hoja_de_vida.domain.Publicacion;
 import com.maestria.gestion.hoja_de_vida.dto.response.HistoriaAcademicaResponseDTO;
+import com.maestria.gestion.hoja_de_vida.dto.response.AsignaturaCanceladaDTO;
+import com.maestria.gestion.hoja_de_vida.dto.response.AsignaturaHomologadaDTO;
 import com.maestria.gestion.hoja_de_vida.exception.ResourceNotFoundException;
 import com.maestria.gestion.hoja_de_vida.repository.AsignaturaCursadaRepository;
 import com.maestria.gestion.hoja_de_vida.repository.AsignaturaCursadaRepository.AsignaturaCursadaResumen;
@@ -60,6 +63,9 @@ class HistoriaAcademicaServiceImplTest {
 
     @Mock
     private EstudianteDistincionAcademicaRepository estudianteDistincionAcademicaRepository;
+
+    @Mock
+    private GestionSolicitudesClient gestionSolicitudesClient;
 
     @InjectMocks
     private HistoriaAcademicaServiceImpl historiaAcademicaService;
@@ -112,6 +118,28 @@ class HistoriaAcademicaServiceImplTest {
                 .thenReturn(Optional.of(directorCodirector("Diana Torres", "Andrés Ruiz")));
 
         when(estudianteDistincionAcademicaRepository.findCodigosByEstudianteId(1L)).thenReturn(List.of());
+        when(gestionSolicitudesClient.obtenerAsignaturasHomologadas(1L)).thenReturn(List.of(
+                AsignaturaHomologadaDTO.builder()
+                        .nombreAsignatura("Arquitectura de software")
+                        .creditos(4)
+                        .calificacion(4.5)
+                        .programaProcedencia("Especialización en desarrollo")
+                        .institucionProcedencia("Universidad de origen")
+                        .build(),
+                AsignaturaHomologadaDTO.builder()
+                        .nombreAsignatura("Homologada sin créditos")
+                        .build(),
+                AsignaturaHomologadaDTO.builder()
+                        .nombreAsignatura("Homologada con créditos inválidos")
+                        .creditos(-2)
+                        .build()));
+        when(gestionSolicitudesClient.obtenerAsignaturasCanceladas(1L)).thenReturn(List.of(
+                AsignaturaCanceladaDTO.builder()
+                        .nombreAsignatura("Inteligencia artificial")
+                        .idSolicitud(37)
+                        .grupo("A")
+                        .periodoCancelacion("2026-2")
+                        .build()));
 
         HistoriaAcademicaResponseDTO resultado = historiaAcademicaService.obtenerHistoriaAcademica("2024001");
 
@@ -130,8 +158,21 @@ class HistoriaAcademicaServiceImplTest {
         assertThat(resultado.getHistoriaAcademica().getComplementacion().getCompetenciasEmpresariales()
                 .getAsignaturas()).hasSize(1);
         assertThat(resultado.getHistoriaAcademica().getInformacionAdicional().getAsignaturas()).hasSize(1);
+        assertThat(resultado.getHistoriaAcademica().getInformacionAdicional().getAsignaturasHomologadas())
+                .first()
+                .satisfies(asignatura -> {
+                    assertThat(asignatura.getNombreAsignatura()).isEqualTo("Arquitectura de software");
+                    assertThat(asignatura.getCalificacion()).isEqualTo(4.5);
+                });
+        assertThat(resultado.getHistoriaAcademica().getInformacionAdicional().getAsignaturasCanceladas())
+                .singleElement()
+                .satisfies(asignatura -> {
+                    assertThat(asignatura.getNombreAsignatura()).isEqualTo("Inteligencia artificial");
+                    assertThat(asignatura.getGrupo()).isEqualTo("A");
+                    assertThat(asignatura.getPeriodoCancelacion()).isEqualTo("2026-2");
+                });
 
-        assertThat(resultado.getHistoriaAcademica().getInformacionAdicional().getCreditosCumplidos()).isEqualTo(14);
+        assertThat(resultado.getHistoriaAcademica().getInformacionAdicional().getCreditosCumplidos()).isEqualTo(18);
         assertThat(resultado.getHistoriaAcademica().getInformacionAdicional().getTituloTesis())
                 .isEqualTo("Sistema académico");
         assertThat(resultado.getHistoriaAcademica().getInformacionAdicional().getDirectorTesis())

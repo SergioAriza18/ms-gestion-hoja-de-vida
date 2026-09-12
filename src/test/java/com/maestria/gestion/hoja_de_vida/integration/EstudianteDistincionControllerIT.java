@@ -24,6 +24,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
@@ -36,6 +37,7 @@ import org.springframework.test.context.jdbc.SqlMergeMode;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.maestria.gestion.hoja_de_vida.repository.EstudianteDistincionAcademicaRepository;
+import com.maestria.gestion.hoja_de_vida.client.GestionSolicitudesClient;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -57,6 +59,9 @@ class EstudianteDistincionControllerIT {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @MockBean
+    private GestionSolicitudesClient gestionSolicitudesClient;
 
     @Autowired
     private EstudianteDistincionAcademicaRepository estudianteDistincionAcademicaRepository;

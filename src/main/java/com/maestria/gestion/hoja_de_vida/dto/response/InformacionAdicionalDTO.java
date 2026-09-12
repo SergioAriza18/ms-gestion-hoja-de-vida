@@ -18,5 +18,7 @@ public class InformacionAdicionalDTO {
     private String directorTesis;
     private String codirectorTesis;
     private List<AsignaturaCursadaDTO> asignaturas;
+    private List<AsignaturaHomologadaDTO> asignaturasHomologadas;
+    private List<AsignaturaCanceladaDTO> asignaturasCanceladas;
     private List<String> distincionesAcademicas;
 }

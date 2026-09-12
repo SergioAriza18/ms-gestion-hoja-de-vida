@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpHeaders;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.jdbc.Sql;
@@ -29,6 +30,7 @@ import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
+import com.maestria.gestion.hoja_de_vida.client.GestionSolicitudesClient;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -48,6 +50,9 @@ class SeguridadControllerIT {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @MockBean
+    private GestionSolicitudesClient gestionSolicitudesClient;
 
     @Test
     @DisplayName("Debe responder 401 cuando no se envía token")

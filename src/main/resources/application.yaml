@@ -30,3 +30,6 @@ app:
   security:
     jwt:
       secret: ${HOJA_VIDA_JWT_SECRET}
+  services:
+    solicitudes:
+      url: ${HOJA_VIDA_SOLICITUDES_URL:http://localhost:8095/msmaestriac}
