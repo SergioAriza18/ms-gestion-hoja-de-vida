@@ -1,5 +1,5 @@
 INSERT INTO asignaturas (id, codigo_asignatura, nombre_asignatura, creditos, area_formacion) VALUES
-    (8, 'PSI POSG_MC', 'Prueba de Suficiencia Idioma Extranjero', 0, 9);
+    (8, 'PSI POSG_MC', 'Prueba de Suficiencia Idioma Extranjero', 0, 5);
 
 INSERT INTO matriculas (id, id_estudiante, anio, periodo) VALUES
     (2, 2, 2024, 1),

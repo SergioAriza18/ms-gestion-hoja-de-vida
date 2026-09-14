@@ -4,5 +4,5 @@ public enum EstadoMaestria {
     ACTIVO,
     MAESTRIA_FINALIZADA,
     RETIRADO,
-    EN_SUSPENCION
+    EN_SUSPENSION
 }
