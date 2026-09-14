@@ -11,7 +11,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class AsignaturaCanceladaDTO {
 
-    private Integer idSolicitud;
     private String nombreAsignatura;
     private String grupo;
     private String periodoCancelacion;

@@ -33,3 +33,5 @@ app:
   services:
     solicitudes:
       url: ${HOJA_VIDA_SOLICITUDES_URL:http://localhost:8095/msmaestriac}
+      connect-timeout: ${HOJA_VIDA_SOLICITUDES_CONNECT_TIMEOUT:5s}
+      read-timeout: ${HOJA_VIDA_SOLICITUDES_READ_TIMEOUT:15s}

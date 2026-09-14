@@ -6,10 +6,13 @@ import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.Matchers.not;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.util.List;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -26,6 +29,7 @@ import org.springframework.test.context.jdbc.SqlMergeMode;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.maestria.gestion.hoja_de_vida.client.GestionSolicitudesClient;
+import com.maestria.gestion.hoja_de_vida.dto.response.AsignaturaHomologadaDTO;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -238,6 +242,25 @@ class HojaVidaControllerIT {
                 .andExpect(jsonPath(
                         "$.historiaAcademica.informacionAdicional.distincionesAcademicas",
                         hasSize(0)));
+    }
+
+    // Caso: una homologación con nota debe participar en el promedio de carrera.
+    @Test
+    @DisplayName("Debe incluir las calificaciones homologadas en el promedio de carrera")
+    void obtenerHistoriaAcademicaIncluyeHomologadasEnPromedio() throws Exception {
+        when(gestionSolicitudesClient.obtenerAsignaturasHomologadas(1L))
+                .thenReturn(List.of(AsignaturaHomologadaDTO.builder()
+                        .nombreAsignatura("Arquitectura de software")
+                        .creditos(4)
+                        .calificacion(4.5)
+                        .build()));
+
+        mockMvc.perform(get("/api/hoja-vida/estudiantes/{codigo}/historia-academica", "2024001"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.estudiante.promedioCarrera").value(3.8))
+                .andExpect(jsonPath(
+                        "$.historiaAcademica.informacionAdicional.asignaturasHomologadas[0].calificacion")
+                        .value(4.5));
     }
 
     // Caso: historia académica debe mapear reglas especiales y omitir calificaciones no definitivas.

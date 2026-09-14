@@ -3,6 +3,11 @@ package com.maestria.gestion.hoja_de_vida.unit.service.impl;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
+import static com.maestria.gestion.hoja_de_vida.common.HistoriaAcademicaConstants.AREA_COMPLEMENTACION;
+import static com.maestria.gestion.hoja_de_vida.common.HistoriaAcademicaConstants.AREA_ELECTIVAS;
+import static com.maestria.gestion.hoja_de_vida.common.HistoriaAcademicaConstants.AREA_FUNDAMENTACION;
+import static com.maestria.gestion.hoja_de_vida.common.HistoriaAcademicaConstants.AREA_INVESTIGACION;
+import static com.maestria.gestion.hoja_de_vida.common.HistoriaAcademicaConstants.AREA_REQUISITOS_GRADO;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -85,11 +90,15 @@ class HistoriaAcademicaServiceImplTest {
     void obtenerHistoriaAcademicaConstruyeRespuestaCompleta() {
         Estudiante estudiante = estudiante();
         List<AsignaturaCursadaResumen> asignaturas = List.of(
-                asignatura(5L, "M10001", "Fundamentos de computación", 4, new BigDecimal("4.0")),
-                asignatura(6L, "M10002", "Electiva avanzada", 3, new BigDecimal("3.4")),
-                asignatura(7L, "M27708", "Seminario de investigación", 4, BigDecimal.valueOf(5)),
-                asignatura(8L, "M10003", "Competencias empresariales", 2, new BigDecimal("3.5")),
-                asignatura(9L, "M27712", "Trabajo de grado II", 4, BigDecimal.valueOf(5)));
+                asignatura(AREA_FUNDAMENTACION, "M10001", "Fundamentos de computación", 4,
+                        new BigDecimal("4.0")),
+                asignatura(AREA_ELECTIVAS, "M10002", "Electiva avanzada", 3, new BigDecimal("3.4")),
+                asignatura(AREA_INVESTIGACION, "M27708", "Seminario de investigación", 4,
+                        BigDecimal.valueOf(5)),
+                asignatura(AREA_COMPLEMENTACION, "M10003", "Competencias empresariales", 2,
+                        new BigDecimal("3.5")),
+                asignatura(AREA_REQUISITOS_GRADO, "M27712", "Trabajo de grado II", 4,
+                        BigDecimal.valueOf(5)));
 
         when(estudianteRepository.findByCodigo("2024001")).thenReturn(Optional.of(estudiante));
         when(asignaturaCursadaRepository.findAsignaturasResumenByEstudianteId(1L)).thenReturn(asignaturas);
@@ -136,7 +145,6 @@ class HistoriaAcademicaServiceImplTest {
         when(gestionSolicitudesClient.obtenerAsignaturasCanceladas(1L)).thenReturn(List.of(
                 AsignaturaCanceladaDTO.builder()
                         .nombreAsignatura("Inteligencia artificial")
-                        .idSolicitud(37)
                         .grupo("A")
                         .periodoCancelacion("2026-2")
                         .build()));
@@ -145,7 +153,7 @@ class HistoriaAcademicaServiceImplTest {
 
         assertThat(resultado.getEstudiante().getCodigoEstudiante()).isEqualTo("2024001");
         assertThat(resultado.getEstudiante().getNombreCompleto()).isEqualTo("Laura Gómez");
-        assertThat(resultado.getEstudiante().getPromedioCarrera()).isEqualByComparingTo(new BigDecimal("3.6"));
+        assertThat(resultado.getEstudiante().getPromedioCarrera()).isEqualByComparingTo(new BigDecimal("3.8"));
         assertThat(resultado.getEstudiante().getEstadoMaestria()).isEqualTo(EstadoMaestria.ACTIVO);
         assertThat(resultado.getEstudiante().getModalidadAcademica()).isEqualTo(ModalidadAcademica.INVESTIGACION);
         assertThat(resultado.getEstudiante().getGrupoInvestigacion().getSigla()).isEqualTo("GTI");
@@ -218,6 +226,27 @@ class HistoriaAcademicaServiceImplTest {
         assertThat(resultado.getHistoriaAcademica().getInformacionAdicional().getTituloTesis()).isEmpty();
         assertThat(resultado.getHistoriaAcademica().getInformacionAdicional().getDirectorTesis()).isEmpty();
         assertThat(resultado.getHistoriaAcademica().getInformacionAdicional().getCodirectorTesis()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("Debe incluir únicamente calificaciones homologadas válidas en el promedio")
+    void consultarPromedioCarreraIncluyeCalificacionesHomologadasValidas() {
+        when(asignaturaCursadaRepository.findAsignaturasResumenByEstudianteId(1L))
+                .thenReturn(List.of(asignatura(
+                        5L,
+                        "M10001",
+                        "Fundamentos de computación",
+                        4,
+                        new BigDecimal("4.0"))));
+        when(gestionSolicitudesClient.obtenerAsignaturasHomologadas(1L)).thenReturn(List.of(
+                AsignaturaHomologadaDTO.builder().calificacion(4.6).build(),
+                AsignaturaHomologadaDTO.builder().build(),
+                AsignaturaHomologadaDTO.builder().calificacion(-1.0).build(),
+                AsignaturaHomologadaDTO.builder().calificacion(5.1).build(),
+                AsignaturaHomologadaDTO.builder().calificacion(Double.NaN).build()));
+
+        assertThat(historiaAcademicaService.consultarPromedioCarrera(1L))
+                .isEqualByComparingTo(new BigDecimal("4.3"));
     }
 
     @ParameterizedTest(name = "promedio {0} se muestra como {1}")

@@ -4,9 +4,6 @@ import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.ContentDisposition;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,7 +12,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.maestria.gestion.hoja_de_vida.dto.response.HistoriaAcademicaResponseDTO;
-import com.maestria.gestion.hoja_de_vida.dto.response.DocumentoFirmadoSolicitudDTO;
 import com.maestria.gestion.hoja_de_vida.service.HistoriaAcademicaService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -59,30 +55,4 @@ public class HistoriaAcademicaController {
         return ResponseEntity.ok(historiaAcademicaService.obtenerHistoriaAcademica(codigoEstudiante));
     }
 
-    @GetMapping(
-            value = "/{codigoEstudiante}/solicitudes/{idSolicitud}/documento-firmado",
-            produces = MediaType.APPLICATION_PDF_VALUE)
-    @PreAuthorize("@hojaVidaAuthorization.puedeConsultar(authentication, #codigoEstudiante)")
-    @Operation(summary = "Consultar el documento final firmado de una cancelación aprobada")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Documento firmado consultado correctamente."),
-            @ApiResponse(responseCode = "404", ref = NOT_FOUND_RESPONSE)
-    })
-    public ResponseEntity<byte[]> getDocumentoFirmadoCancelacion(
-            @PathVariable
-            @Size(max = 30, message = "El parámetro no puede superar los 30 caracteres.")
-            @Pattern(regexp = "^[A-Za-z0-9-]+$", message = "El parámetro tiene un formato inválido.")
-            String codigoEstudiante,
-            @PathVariable Integer idSolicitud) {
-        DocumentoFirmadoSolicitudDTO documento = historiaAcademicaService
-                .obtenerDocumentoFirmadoCancelacion(codigoEstudiante, idSolicitud);
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_PDF);
-        headers.setContentDisposition(ContentDisposition.inline()
-                .filename(documento.getNombreArchivo())
-                .build());
-        return ResponseEntity.ok()
-                .headers(headers)
-                .body(documento.getContenido());
-    }
 }

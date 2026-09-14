@@ -3,6 +3,7 @@ package com.maestria.gestion.hoja_de_vida.service.impl;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,7 +15,6 @@ import com.maestria.gestion.hoja_de_vida.dto.response.AsignaturaCursadaDTO;
 import com.maestria.gestion.hoja_de_vida.dto.response.AsignaturaCanceladaDTO;
 import com.maestria.gestion.hoja_de_vida.dto.response.AsignaturaHomologadaDTO;
 import com.maestria.gestion.hoja_de_vida.dto.response.HistoriaAcademicaResponseDTO;
-import com.maestria.gestion.hoja_de_vida.dto.response.DocumentoFirmadoSolicitudDTO;
 import com.maestria.gestion.hoja_de_vida.dto.response.PasantiaDTO;
 import com.maestria.gestion.hoja_de_vida.dto.response.PracticaDTO;
 import com.maestria.gestion.hoja_de_vida.dto.response.PublicacionDTO;
@@ -43,6 +43,7 @@ import static com.maestria.gestion.hoja_de_vida.common.HistoriaAcademicaConstant
 import static com.maestria.gestion.hoja_de_vida.common.HistoriaAcademicaConstants.ESCALA_NOTA_MOSTRADA;
 import static com.maestria.gestion.hoja_de_vida.common.HistoriaAcademicaConstants.NOTA_APROBATORIA;
 import static com.maestria.gestion.hoja_de_vida.common.HistoriaAcademicaConstants.VALOR_TEXTO_VACIO;
+import static com.maestria.gestion.hoja_de_vida.common.HistoriaAcademicaRules.esCalificacionValida;
 import static com.maestria.gestion.hoja_de_vida.common.HistoriaAcademicaRules.esMateriaEspecial;
 
 @Service
@@ -112,7 +113,9 @@ public class HistoriaAcademicaServiceImpl implements HistoriaAcademicaService {
                                 publicacionesDto,
                                 practicasDocentes,
                                 asignaturasHomologadas);
-                BigDecimal promedioCarrera = calcularPromedioCarrera(asignaturas);
+                BigDecimal promedioCarrera = calcularPromedioCarrera(
+                                asignaturas,
+                                asignaturasHomologadas);
                 String tituloTesis = estudianteRepository
                                 .findTituloTesisByEstudianteId(idEstudiante)
                                 .orElse(VALOR_TEXTO_VACIO);
@@ -149,7 +152,8 @@ public class HistoriaAcademicaServiceImpl implements HistoriaAcademicaService {
         @Override
         public BigDecimal consultarPromedioCarrera(Long idEstudiante) {
                 return calcularPromedioCarrera(
-                                asignaturaCursadaRepository.findAsignaturasResumenByEstudianteId(idEstudiante));
+                                asignaturaCursadaRepository.findAsignaturasResumenByEstudianteId(idEstudiante),
+                                gestionSolicitudesClient.obtenerAsignaturasHomologadas(idEstudiante));
         }
 
         private List<AsignaturaCursadaDTO> filtrarAsignaturasPorArea(List<AsignaturaCursadaResumen> asignaturas,
@@ -173,54 +177,38 @@ public class HistoriaAcademicaServiceImpl implements HistoriaAcademicaService {
                         List<PracticaDTO> practicasDocentes,
                         List<AsignaturaHomologadaDTO> asignaturasHomologadas) {
 
-                int creditosAsignaturas = asignaturas.stream()
+                int creditosAsignaturas = sumarCreditosValidos(asignaturas.stream()
                                 .filter(asignatura -> AREAS_CON_CREDITOS.contains(asignatura.getAreaFormacion()))
                                 .filter(asignatura -> asignatura.getNota() != null
                                                 && asignatura.getNota().compareTo(NOTA_APROBATORIA) >= 0)
-                                .map(AsignaturaCursadaResumen::getCreditos)
-                                .filter(credito -> credito != null && credito > 0)
-                                .mapToInt(Integer::intValue)
-                                .sum();
+                                .map(AsignaturaCursadaResumen::getCreditos));
 
-                int creditosPasantias = pasantias.stream()
-                                .map(PasantiaDTO::getCreditosAsignados)
-                                .filter(credito -> credito != null && credito > 0)
-                                .mapToInt(Integer::intValue)
-                                .sum();
+                int creditosPasantias = sumarCreditosValidos(
+                                pasantias.stream().map(PasantiaDTO::getCreditosAsignados));
 
-                int creditosPublicaciones = publicaciones.stream()
-                                .map(PublicacionDTO::getCreditosAsignados)
-                                .filter(credito -> credito != null && credito > 0)
-                                .mapToInt(Integer::intValue)
-                                .sum();
+                int creditosPublicaciones = sumarCreditosValidos(
+                                publicaciones.stream().map(PublicacionDTO::getCreditosAsignados));
 
-                int creditosPracticas = practicasDocentes.stream()
-                                .map(PracticaDTO::getCreditosAsignados)
-                                .filter(credito -> credito != null && credito > 0)
-                                .mapToInt(Integer::intValue)
-                                .sum();
+                int creditosPracticas = sumarCreditosValidos(
+                                practicasDocentes.stream().map(PracticaDTO::getCreditosAsignados));
 
-                int creditosHomologados = asignaturasHomologadas.stream()
-                                .map(AsignaturaHomologadaDTO::getCreditos)
-                                .filter(credito -> credito != null && credito > 0)
-                                .mapToInt(Integer::intValue)
-                                .sum();
+                int creditosHomologados = sumarCreditosValidos(
+                                asignaturasHomologadas.stream().map(AsignaturaHomologadaDTO::getCreditos));
 
                 return creditosAsignaturas + creditosPasantias + creditosPublicaciones + creditosPracticas
                                 + creditosHomologados;
         }
 
-        @Override
-        public DocumentoFirmadoSolicitudDTO obtenerDocumentoFirmadoCancelacion(
-                        String codigoEstudiante,
-                        Integer idSolicitud) {
-                Estudiante estudiante = obtenerEstudiantePorCodigo(codigoEstudiante);
-                return gestionSolicitudesClient.obtenerDocumentoFirmadoCancelacion(
-                                estudiante.getId(),
-                                idSolicitud);
+        private int sumarCreditosValidos(Stream<Integer> creditos) {
+                return creditos
+                                .filter(credito -> credito != null && credito > 0)
+                                .mapToInt(Integer::intValue)
+                                .sum();
         }
 
-        private BigDecimal calcularPromedioCarrera(List<AsignaturaCursadaResumen> asignaturas) {
+        private BigDecimal calcularPromedioCarrera(
+                        List<AsignaturaCursadaResumen> asignaturas,
+                        List<AsignaturaHomologadaDTO> asignaturasHomologadas) {
                 BigDecimal sumaNotas = BigDecimal.ZERO;
                 int totalNotas = 0;
 
@@ -233,6 +221,17 @@ public class HistoriaAcademicaServiceImpl implements HistoriaAcademicaService {
                                 continue;
                         }
 
+                        sumaNotas = sumaNotas.add(nota);
+                        totalNotas++;
+                }
+
+                for (AsignaturaHomologadaDTO asignatura : asignaturasHomologadas) {
+                        Double calificacion = asignatura == null ? null : asignatura.getCalificacion();
+                        if (!esCalificacionValida(calificacion)) {
+                                continue;
+                        }
+
+                        BigDecimal nota = BigDecimal.valueOf(calificacion);
                         sumaNotas = sumaNotas.add(nota);
                         totalNotas++;
                 }

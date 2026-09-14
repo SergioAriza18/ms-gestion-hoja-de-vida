@@ -1,111 +1,82 @@
 package com.maestria.gestion.hoja_de_vida.client;
 
-import java.time.Duration;
-import java.util.Arrays;
 import java.util.List;
+import java.util.function.Function;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.web.client.RestTemplateBuilder;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClientException;
-import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
-import com.maestria.gestion.hoja_de_vida.dto.response.AsignaturaHomologadaDTO;
+import com.maestria.gestion.hoja_de_vida.config.GestionSolicitudesProperties;
 import com.maestria.gestion.hoja_de_vida.dto.response.AsignaturaCanceladaDTO;
-import com.maestria.gestion.hoja_de_vida.dto.response.DocumentoFirmadoSolicitudDTO;
-import com.maestria.gestion.hoja_de_vida.exception.ResourceNotFoundException;
+import com.maestria.gestion.hoja_de_vida.dto.response.AsignaturaHomologadaDTO;
 
 @Component
 public class GestionSolicitudesClient {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(GestionSolicitudesClient.class);
+    private static final String RUTA_HOMOLOGACIONES =
+            "/gestionSolicitud/estudiantes/{idEstudiante}/asignaturas-homologadas";
+    private static final String RUTA_CANCELACIONES =
+            "/gestionSolicitud/estudiantes/{idEstudiante}/asignaturas-canceladas";
 
     private final RestTemplate restTemplate;
+    private final GestionSolicitudesResponseNormalizer responseNormalizer;
     private final String urlBase;
 
     public GestionSolicitudesClient(
             RestTemplateBuilder restTemplateBuilder,
-            @Value("${app.services.solicitudes.url}") String urlBase) {
+            GestionSolicitudesProperties properties,
+            GestionSolicitudesResponseNormalizer responseNormalizer) {
         this.restTemplate = restTemplateBuilder
-                .setConnectTimeout(Duration.ofSeconds(5))
-                .setReadTimeout(Duration.ofSeconds(15))
+                .setConnectTimeout(properties.getConnectTimeout())
+                .setReadTimeout(properties.getReadTimeout())
                 .build();
-        this.urlBase = quitarBarraFinal(urlBase);
+        this.responseNormalizer = responseNormalizer;
+        this.urlBase = quitarBarraFinal(properties.getUrl());
     }
 
     public List<AsignaturaHomologadaDTO> obtenerAsignaturasHomologadas(Long idEstudiante) {
-        String url = urlBase
-                + "/gestionSolicitud/estudiantes/{idEstudiante}/asignaturas-homologadas";
-        try {
-            AsignaturaHomologadaDTO[] respuesta = restTemplate.getForObject(
-                    url,
-                    AsignaturaHomologadaDTO[].class,
-                    idEstudiante);
-            return respuesta == null ? List.of() : Arrays.asList(respuesta);
-        } catch (RestClientException ex) {
-            LOGGER.warn(
-                    "No fue posible consultar las asignaturas homologadas del estudiante {}. "
-                            + "La historia académica continuará sin esta información: {}",
-                    idEstudiante,
-                    ex.getMessage());
-            return List.of();
-        }
+        return consultarAsignaturas(
+                idEstudiante,
+                RUTA_HOMOLOGACIONES,
+                AsignaturaHomologadaDTO[].class,
+                responseNormalizer::normalizarHomologaciones,
+                "homologadas");
     }
 
     public List<AsignaturaCanceladaDTO> obtenerAsignaturasCanceladas(Long idEstudiante) {
-        String url = urlBase
-                + "/gestionSolicitud/estudiantes/{idEstudiante}/asignaturas-canceladas";
+        return consultarAsignaturas(
+                idEstudiante,
+                RUTA_CANCELACIONES,
+                AsignaturaCanceladaDTO[].class,
+                responseNormalizer::normalizarCancelaciones,
+                "canceladas");
+    }
+
+    private <T> List<T> consultarAsignaturas(
+            Long idEstudiante,
+            String ruta,
+            Class<T[]> tipoRespuesta,
+            Function<T[], List<T>> normalizador,
+            String tipoAsignaturas) {
         try {
-            AsignaturaCanceladaDTO[] respuesta = restTemplate.getForObject(
-                    url,
-                    AsignaturaCanceladaDTO[].class,
+            T[] respuesta = restTemplate.getForObject(
+                    urlBase + ruta,
+                    tipoRespuesta,
                     idEstudiante);
-            return respuesta == null ? List.of() : Arrays.asList(respuesta);
+            return normalizador.apply(respuesta);
         } catch (RestClientException ex) {
             LOGGER.warn(
-                    "No fue posible consultar las asignaturas canceladas del estudiante {}. "
+                    "No fue posible consultar las asignaturas {} del estudiante {}. "
                             + "La historia académica continuará sin esta información: {}",
+                    tipoAsignaturas,
                     idEstudiante,
                     ex.getMessage());
             return List.of();
-        }
-    }
-
-    public DocumentoFirmadoSolicitudDTO obtenerDocumentoFirmadoCancelacion(
-            Long idEstudiante,
-            Integer idSolicitud) {
-        String url = urlBase
-                + "/gestionSolicitud/estudiantes/{idEstudiante}/solicitudes/{idSolicitud}/documento-firmado";
-        try {
-            ResponseEntity<byte[]> respuesta = restTemplate.exchange(
-                    url,
-                    HttpMethod.GET,
-                    HttpEntity.EMPTY,
-                    byte[].class,
-                    idEstudiante,
-                    idSolicitud);
-            byte[] contenido = respuesta.getBody();
-            if (contenido == null || contenido.length == 0) {
-                throw new ResourceNotFoundException("La solicitud no tiene un documento final firmado.");
-            }
-
-            String nombreArchivo = respuesta.getHeaders().getContentDisposition().getFilename();
-            if (nombreArchivo == null || nombreArchivo.isBlank()) {
-                nombreArchivo = "solicitud-firmada.pdf";
-            }
-            return new DocumentoFirmadoSolicitudDTO(nombreArchivo, contenido);
-        } catch (HttpClientErrorException.NotFound ex) {
-            throw new ResourceNotFoundException("No se encontró el documento final firmado de la solicitud.");
-        } catch (RestClientException ex) {
-            throw new IllegalStateException(
-                    "No fue posible consultar el documento final firmado en el servicio de solicitudes.",
-                    ex);
         }
     }
 
