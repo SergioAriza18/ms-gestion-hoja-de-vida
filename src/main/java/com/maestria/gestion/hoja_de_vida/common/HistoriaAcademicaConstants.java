@@ -7,11 +7,11 @@ import java.util.Set;
 public final class HistoriaAcademicaConstants {
 
     // Áreas de formación
-    public static final Long AREA_FUNDAMENTACION = 5L;
-    public static final Long AREA_ELECTIVAS = 6L;
-    public static final Long AREA_INVESTIGACION = 7L;
-    public static final Long AREA_COMPLEMENTACION = 8L;
-    public static final Long AREA_REQUISITOS_GRADO = 9L;
+    public static final Long AREA_FUNDAMENTACION = 1L;
+    public static final Long AREA_ELECTIVAS = 2L;
+    public static final Long AREA_INVESTIGACION = 3L;
+    public static final Long AREA_COMPLEMENTACION = 4L;
+    public static final Long AREA_REQUISITOS_GRADO = 5L;
 
     // Valores de texto
     public static final String VALOR_TEXTO_VACIO = "";
