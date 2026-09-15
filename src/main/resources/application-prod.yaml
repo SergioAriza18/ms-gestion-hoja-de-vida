@@ -29,6 +29,11 @@ spring:
 app:
   cors:
     allowed-origins: ${HOJA_VIDA_CORS_ALLOWED_ORIGINS}
+  services:
+    solicitudes:
+      url: ${HOJA_VIDA_SOLICITUDES_URL}
+      connect-timeout: ${HOJA_VIDA_SOLICITUDES_CONNECT_TIMEOUT:5s}
+      read-timeout: ${HOJA_VIDA_SOLICITUDES_READ_TIMEOUT:15s}
 
 logging:
   level:

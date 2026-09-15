@@ -19,6 +19,7 @@ Una etiqueta publicada no debe reutilizarse con contenido diferente. `latest` pu
 - repositorio creado en Docker Hub;
 - acceso mediante `docker login` si el repositorio es privado;
 - esquema MySQL preparado y accesible desde el servidor de TICS;
+- microservicio de gestión de solicitudes accesible para consultar homologaciones y cancelaciones;
 - clave JWT compartida con el microservicio de autenticación;
 - URL HTTPS definitiva del frontend para configurar CORS.
 
@@ -65,6 +66,7 @@ docker logs hoja-vida-validacion
 - `GET /actuator/health/readiness` responde `200` y confirma indirectamente la conexión a la base de datos;
 - los endpoints protegidos aceptan un JWT emitido por autenticación;
 - la consulta y generación de una hoja de vida funcionan;
+- las homologaciones y cancelaciones se obtienen desde gestión de solicitudes;
 - el registro y la descarga de una resolución PDF conservan el archivo;
 - Swagger no está disponible con el perfil `prod`.
 
@@ -92,6 +94,8 @@ El comando final muestra el manifiesto publicado. El digest se debe copiar al ac
 ## 6. Preparación de la base de datos
 
 La imagen no contiene MySQL ni scripts ejecutados automáticamente. El perfil `prod` utiliza `spring.jpa.hibernate.ddl-auto=validate`: valida la estructura al iniciar, pero nunca crea o modifica tablas.
+
+Para la demostración local se incluye `deploy/compose.database.yaml`. Este archivo crea un MySQL independiente con volumen persistente y ejecuta `deploy/database/01-estructura.sql`, `02-catalogos.sql` y `03-datos-prueba.sql` únicamente la primera vez que inicializa un volumen vacío. Este mecanismo local no sustituye el proceso institucional de migraciones.
 
 La entrega de base de datos debe componerse de:
 
@@ -149,6 +153,9 @@ El servicio debe publicarse mediante el proxy inverso institucional con HTTPS. S
 | `HOJA_VIDA_DB_URL` | Sí | URL JDBC hacia el MySQL privado. |
 | `HOJA_VIDA_DB_USERNAME` | Sí | Usuario de ejecución con privilegios mínimos. |
 | `HOJA_VIDA_DB_PASSWORD` | Sí | Contraseña administrada como secreto. |
+| `HOJA_VIDA_SOLICITUDES_URL` | Sí | URL interna base de gestión de solicitudes, incluido `/msmaestriac`. |
+| `HOJA_VIDA_SOLICITUDES_CONNECT_TIMEOUT` | No | Espera para establecer conexión; predeterminado `5s`. |
+| `HOJA_VIDA_SOLICITUDES_READ_TIMEOUT` | No | Espera de respuesta; predeterminado `15s`. |
 | `HOJA_VIDA_RESOLUTION_MAX_SIZE` | No | Tamaño máximo del PDF; predeterminado `5MB`. |
 | `HOJA_VIDA_MAX_REQUEST_SIZE` | No | Tamaño máximo de la petición; predeterminado `6MB`. |
 | `HOJA_VIDA_DB_POOL_MAX_SIZE` | No | Máximo de conexiones; predeterminado `10`. |

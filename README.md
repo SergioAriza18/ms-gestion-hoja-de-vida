@@ -56,6 +56,10 @@ HOJA_VIDA_JWT_SECRET=clave_base64_compartida_con_autenticacion
 HOJA_VIDA_DB_URL=jdbc:mysql://localhost:3306/nombre_base_datos?useSSL=false&serverTimezone=America/Bogota
 HOJA_VIDA_DB_USERNAME=usuario_local
 HOJA_VIDA_DB_PASSWORD=contrasena_local
+
+HOJA_VIDA_SOLICITUDES_URL=http://localhost:8095/msmaestriac
+HOJA_VIDA_SOLICITUDES_CONNECT_TIMEOUT=5s
+HOJA_VIDA_SOLICITUDES_READ_TIMEOUT=15s
 ```
 
 La clave `HOJA_VIDA_JWT_SECRET` debe ser la misma que utiliza el microservicio de autenticación para firmar los tokens HS512. Debe estar codificada en Base64 y representar al menos 64 bytes.
@@ -120,11 +124,22 @@ docker run --rm --name ms-gestion-hoja-de-vida `
   ms-gestion-hoja-de-vida:1.0.0
 ```
 
-Si MySQL se ejecuta directamente en Windows, `HOJA_VIDA_DB_URL` debe utilizar `host.docker.internal` en lugar de `localhost`. Si MySQL se encuentra en otro contenedor, ambos deben compartir una red Docker y la URL debe usar el nombre de ese servicio.
+Si MySQL o gestión de solicitudes se ejecutan directamente en Windows, sus URL deben utilizar `host.docker.internal` en lugar de `localhost`. Si se encuentran en otros contenedores, deben compartir una red Docker y las URL deben usar los nombres de esos servicios.
 
 En producción, las credenciales y la clave JWT deben configurarse como secretos de la plataforma; la aplicación también admite secretos montados como archivos en `/run/secrets/`. El esquema y sus migraciones deben ejecutarse antes de iniciar esta imagen, porque Hibernate solo valida las tablas existentes.
 
 El estado del contenedor se consulta internamente mediante `/actuator/health/readiness`. El endpoint no revela detalles sensibles.
+
+Durante las pruebas locales puede reconstruir y reemplazar el único contenedor de trabajo, sin administrar versiones, mediante:
+
+```powershell
+.\deploy\iniciar-base-datos.ps1
+.\deploy\actualizar-contenedor-local.ps1
+```
+
+El primer script inicia MySQL en `127.0.0.1:3307`, crea un volumen persistente y carga, solo al inicializarlo, los archivos de `deploy/database` en su orden numérico. Requiere un archivo local `deploy/database.env`, basado en `deploy/database.env.example`.
+
+El segundo utiliza la etiqueta `ms-gestion-hoja-de-vida:local`, carga las variables desde `.env` y conecta el backend a MySQL mediante la red privada `maestriacomputacion-hv-network`.
 
 El procedimiento de versionado, validación, publicación en Docker Hub, preparación de base de datos y entrega a TICS se encuentra en [DEPLOYMENT.md](DEPLOYMENT.md).
 
