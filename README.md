@@ -8,7 +8,9 @@ Permite consultar estudiantes, consolidar su trayectoria académica y administra
 
 - Consulta, búsqueda y filtrado de estudiantes.
 - Generación de la historia académica consolidada.
-- Consulta de asignaturas, créditos, promedio e información académica adicional.
+- Consulta de la información básica y académica del estudiante.
+- Integración con Gestión de Solicitudes para consultar asignaturas homologadas y canceladas.
+- Consulta de publicaciones, pasantías, prácticas docentes y trabajos de grado.
 - Registro, consulta, edición y eliminación de distinciones académicas.
 - Validación y descarga de resoluciones en formato PDF.
 - Autorización por roles y acceso del estudiante únicamente a su información.
@@ -30,6 +32,7 @@ Permite consultar estudiantes, consolidar su trayectoria académica y administra
 - JDK 17
 - MySQL 8 o una versión compatible
 - Microservicio de autenticación en ejecución para obtener tokens mediante el flujo real de inicio de sesión
+- Microservicio de Gestión de Solicitudes para incluir homologaciones y cancelaciones en la historia académica
 
 El proyecto incluye Maven Wrapper, por lo que no es necesario instalar Maven globalmente.
 
@@ -56,11 +59,17 @@ HOJA_VIDA_JWT_SECRET=clave_base64_compartida_con_autenticacion
 HOJA_VIDA_DB_URL=jdbc:mysql://localhost:3306/nombre_base_datos?useSSL=false&serverTimezone=America/Bogota
 HOJA_VIDA_DB_USERNAME=usuario_local
 HOJA_VIDA_DB_PASSWORD=contrasena_local
+
+HOJA_VIDA_SOLICITUDES_URL=http://localhost:8095/msmaestriac
+HOJA_VIDA_SOLICITUDES_CONNECT_TIMEOUT=5s
+HOJA_VIDA_SOLICITUDES_READ_TIMEOUT=15s
 ```
 
 La clave `HOJA_VIDA_JWT_SECRET` debe ser la misma que utiliza el microservicio de autenticación para firmar los tokens HS512. Debe estar codificada en Base64 y representar al menos 64 bytes.
 
 Las variables opcionales para producción y sus valores predeterminados se encuentran documentados en `.env.example`.
+
+El microservicio puede iniciar y consultar el resto de la hoja de vida aunque Gestión de Solicitudes no esté disponible. En ese caso, las asignaturas homologadas y canceladas se retornan como listas vacías y se registra una advertencia en los logs.
 
 ## Perfiles
 
