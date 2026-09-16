@@ -93,7 +93,7 @@ class HojaVidaRepositoryIT {
         assertThat(primeraAsignatura.getNombreAsignatura()).isEqualTo("Fundamentos de computación");
         assertThat(primeraAsignatura.getCreditos()).isEqualTo(4);
         assertThat(primeraAsignatura.getNota()).isEqualByComparingTo(new BigDecimal("4.0"));
-        assertThat(primeraAsignatura.getAreaFormacion()).isEqualTo(5L);
+        assertThat(primeraAsignatura.getAreaFormacion()).isEqualTo(1L);
     }
 
     @Test

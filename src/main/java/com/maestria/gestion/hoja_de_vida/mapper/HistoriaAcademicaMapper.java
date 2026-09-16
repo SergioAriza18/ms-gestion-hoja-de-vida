@@ -9,7 +9,9 @@ import com.maestria.gestion.hoja_de_vida.domain.Practica;
 import com.maestria.gestion.hoja_de_vida.domain.Publicacion;
 import com.maestria.gestion.hoja_de_vida.dto.response.AreaAcademicaDTO;
 import com.maestria.gestion.hoja_de_vida.dto.response.ActividadPracticaDTO;
+import com.maestria.gestion.hoja_de_vida.dto.response.AsignaturaCanceladaDTO;
 import com.maestria.gestion.hoja_de_vida.dto.response.AsignaturaCursadaDTO;
+import com.maestria.gestion.hoja_de_vida.dto.response.AsignaturaHomologadaDTO;
 import com.maestria.gestion.hoja_de_vida.dto.response.ComplementacionDTO;
 import com.maestria.gestion.hoja_de_vida.dto.response.EstudianteHistoriaAcademicaDTO;
 import com.maestria.gestion.hoja_de_vida.dto.response.HistoriaAcademicaDTO;
@@ -128,6 +130,8 @@ public class HistoriaAcademicaMapper {
                         String directorTesis,
                         String codirectorTesis,
                         List<AsignaturaCursadaDTO> requisitosGrado,
+                        List<AsignaturaHomologadaDTO> asignaturasHomologadas,
+                        List<AsignaturaCanceladaDTO> asignaturasCanceladas,
                         List<String> distincionesAcademicas) {
 
                 String nombreCompleto = (estudiante.getPersona().getNombre() + " "
@@ -160,6 +164,8 @@ public class HistoriaAcademicaMapper {
                                 .directorTesis(directorTesis)
                                 .codirectorTesis(codirectorTesis)
                                 .asignaturas(requisitosGrado)
+                                .asignaturasHomologadas(asignaturasHomologadas)
+                                .asignaturasCanceladas(asignaturasCanceladas)
                                 .distincionesAcademicas(distincionesAcademicas)
                                 .build();
 

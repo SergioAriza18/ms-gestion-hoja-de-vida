@@ -1,11 +1,11 @@
 INSERT INTO asignaturas (id, codigo_asignatura, nombre_asignatura, creditos, area_formacion) VALUES
-    (1, 'M10001', 'Fundamentos de computación', 4, 5),
-    (2, 'M10002', 'Electiva avanzada', 3, 6),
-    (3, 'M27708', 'Seminario de investigación', 4, 7),
-    (4, 'M10003', 'Competencias empresariales', 2, 8),
-    (5, 'M27712', 'Trabajo de grado II', 4, 9),
-    (6, 'M27709', 'Trabajo de grado I', 4, 7),
-    (7, 'M99999', 'Asignatura no definitiva', 5, 5);
+    (1, 'M10001', 'Fundamentos de computación', 4, 1),
+    (2, 'M10002', 'Electiva avanzada', 3, 2),
+    (3, 'M27708', 'Seminario de investigación', 4, 3),
+    (4, 'M10003', 'Competencias empresariales', 2, 4),
+    (5, 'M27712', 'Trabajo de grado II', 4, 5),
+    (6, 'M27709', 'Trabajo de grado I', 4, 3),
+    (7, 'M99999', 'Asignatura no definitiva', 5, 1);
 
 INSERT INTO matriculas (id, id_estudiante, anio, periodo) VALUES
     (1, 1, 2024, 1);

@@ -54,4 +54,5 @@ public class HistoriaAcademicaController {
             String codigoEstudiante) {
         return ResponseEntity.ok(historiaAcademicaService.obtenerHistoriaAcademica(codigoEstudiante));
     }
+
 }
